@@ -687,6 +687,113 @@ section{
 .form-footer .book-call:hover{
   opacity:0.7;
 }
+
+/* Modal Styles */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-content{
+  background:var(--bg-alt);
+  border:1px solid var(--line);
+  padding:40px;
+  max-width:500px;
+  width:90%;
+  position:relative;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:transparent;
+  border:none;
+  color:var(--text-dim);
+  font-size:20px;
+  cursor:pointer;
+  transition:color 0.3s ease;
+}
+.modal-close:hover{
+  color:var(--text-primary);
+}
+.modal-content h3{
+  font-size:18px;
+  text-transform:uppercase;
+  font-weight:800;
+  margin-bottom:8px;
+  letter-spacing:0.02em;
+}
+.modal-subtitle{
+  font-size:12px;
+  color:var(--text-dim);
+  margin-bottom:30px;
+}
+.modal-form{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.modal-form-group label{
+  display:block;
+  font-size:11px;
+  color:var(--text-dim);
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+}
+.modal-form-group input,
+.modal-form-group select{
+  width:100%;
+  padding:12px 14px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  color:var(--text-primary);
+  font-family:var(--mono);
+  font-size:13px;
+  transition:border-color 0.3s ease;
+}
+.modal-form-group input:focus,
+.modal-form-group select:focus{
+  outline:none;
+  border-color:var(--accent-blue);
+}
+.modal-form-group input::placeholder{
+  color:var(--text-faint);
+}
+.phone-input{
+  display:grid;
+  grid-template-columns:100px 1fr;
+  gap:10px;
+}
+.phone-input .country-code{
+  cursor:pointer;
+}
+.modal-submit{
+  width:100%;
+  padding:14px 24px;
+  background:var(--accent-blue);
+  color:#000;
+  border:none;
+  font-size:12px;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  font-weight:700;
+  cursor:pointer;
+  transition:opacity 0.3s ease;
+  font-family:var(--mono);
+  margin-top:10px;
+}
+.modal-submit:hover{
+  opacity:0.85;
+}
+
 @media (max-width:900px){
   .form-row{
     grid-template-columns:1fr;

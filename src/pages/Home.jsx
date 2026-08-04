@@ -35,6 +35,7 @@ export default function Home() {
     { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
     { id: 3, title: 'Portfolio CMS', description: 'Self-editable portfolio website with admin panel for content management without touching code.', tags: ['React', 'Supabase', 'Vite'], live_url: '#', repo_url: '#' }
   ])
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -301,13 +302,55 @@ export default function Home() {
                   <button type="submit" className="btn-submit">Send Inquiry</button>
                   
                   <p className="form-footer">
-                    Not interested to <span className="dim">submit the form?</span> <a href="#" className="book-call">Book A Call Directly</a>
+                    Not interested to <span className="dim">submit the form?</span> <a href="#" onClick={(e) => { e.preventDefault(); setShowModal(true); }} className="book-call">Book A Call Directly</a>
                   </p>
                 </form>
               </div>
             </div>
           </div>
         </section>
+
+        {showModal && (
+          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>Book a Call</h3>
+              <p className="modal-subtitle">We'll reach out to schedule a time</p>
+              
+              <form className="modal-form" onSubmit={(e) => { e.preventDefault(); alert('Call booking submitted!'); setShowModal(false); }}>
+                <div className="modal-form-group">
+                  <label htmlFor="modal-name">Name*</label>
+                  <input type="text" id="modal-name" placeholder="Your name" required />
+                </div>
+                
+                <div className="modal-form-group">
+                  <label htmlFor="modal-company">Company</label>
+                  <input type="text" id="modal-company" placeholder="Your company (optional)" />
+                </div>
+                
+                <div className="modal-form-group">
+                  <label htmlFor="modal-email">Email*</label>
+                  <input type="email" id="modal-email" placeholder="you@example.com" required />
+                </div>
+                
+                <div className="modal-form-group">
+                  <label htmlFor="modal-whatsapp">WhatsApp Number</label>
+                  <div className="phone-input">
+                    <select className="country-code">
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                      <option value="+91">+91</option>
+                      <option value="+880" selected>+880</option>
+                    </select>
+                    <input type="tel" id="modal-whatsapp" placeholder="234 567 8900" />
+                  </div>
+                </div>
+                
+                <button type="submit" className="modal-submit">Submit</button>
+              </form>
+            </div>
+          </div>
+        )}
 
         <footer>
           <div className="wrap">
