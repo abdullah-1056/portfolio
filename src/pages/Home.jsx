@@ -248,14 +248,63 @@ export default function Home() {
           <div className="wrap">
             <div className="cta-grid">
               <div className="cta-left">
-                <h2 dangerouslySetInnerHTML={{__html: get('cta_headline', 'LET\'S BUILD<br>SOMETHING GREAT.<br>MOVE IN SILENCE.')}} />
-                <p>{get('cta_subtext', 'Your next project deserves more than ordinary. Step into a space where quality is effortless, intentional, and always on.')}</p>
-                <div className="btn-row">
-                  <button className="btn primary">GET IN TOUCH</button>
-                  <button className="btn">LEARN MORE</button>
-                </div>
+                <div className="contact-label">07 — CONTACT</div>
+                <h2>Have a project idea<br/>in mind? Let's get<br/>started</h2>
+                <p>We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.</p>
               </div>
-              <div className="cta-panel"></div>
+              <div className="contact-form-panel">
+                <form className="contact-form">
+                  <div className="form-group">
+                    <label htmlFor="fullname">Full Name*</label>
+                    <input type="text" id="fullname" placeholder="Jane Cooper" required />
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="company">Company name*</label>
+                      <input type="text" id="company" placeholder="Ex. Tesla Inc" required />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="email">Email*</label>
+                      <input type="email" id="email" placeholder="You@Example.Com" required />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="service">Service required*</label>
+                      <select id="service" required>
+                        <option value="">Select Your Service</option>
+                        <option value="web-dev">Web Development</option>
+                        <option value="ui-ux">UI/UX Design</option>
+                        <option value="consulting">Consulting</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="budget">Project budget*</label>
+                      <select id="budget" required>
+                        <option value="">Select Your Range</option>
+                        <option value="1k-5k">$1,000 - $5,000</option>
+                        <option value="5k-10k">$5,000 - $10,000</option>
+                        <option value="10k-25k">$10,000 - $25,000</option>
+                        <option value="25k+">$25,000+</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="details">Project details*</label>
+                    <textarea id="details" rows="4" placeholder="Tell us more about your idea" required></textarea>
+                  </div>
+
+                  <button type="submit" className="btn-submit">Send Inquiry</button>
+                  
+                  <p className="form-footer">
+                    Not interested to <span className="dim">submit the form?</span> <a href="#" className="book-call">Book A Call Directly</a>
+                  </p>
+                </form>
+              </div>
             </div>
           </div>
         </section>
