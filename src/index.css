@@ -112,22 +112,20 @@ section{
 #home{
   min-height:92vh;
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   position:relative;
 }
 
 #home .wrap{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
+  justify-content:flex-start;
+  align-items:flex-end;
   width:100%;
   padding-top:60px;
-  padding-bottom:60px;
-  gap:80px;
+  padding-bottom:80px;
 }
 
 .home-left{
-  flex:1;
   max-width:650px;
   text-align:left;
 }
@@ -177,47 +175,6 @@ section{
   background:var(--accent-blue);
   border-color:var(--accent-blue);
   color:var(--bg);
-}
-
-.home-stats{
-  display:flex;
-  flex-direction:column;
-  gap:50px;
-  text-align:right;
-  min-width:180px;
-}
-.home-stats > div{
-  position:relative;
-}
-.home-stats .stat-num{
-  font-size:3.5rem;
-  font-weight:800;
-  line-height:1;
-  color:var(--text-primary);
-  margin-bottom:8px;
-}
-.home-stats .stat-label{
-  font-size:11px;
-  color:var(--text-faint);
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  font-weight:500;
-}
-
-@media (max-width:900px){
-  #home .wrap{
-    gap:50px;
-  }
-  .home-stats{
-    flex-direction:row;
-    justify-content:space-between;
-    width:100%;
-    text-align:center;
-    gap:20px;
-  }
-  .home-stats .stat-num{
-    font-size:2.5rem;
-  }
 }
 
 #about-hero .wrap{
