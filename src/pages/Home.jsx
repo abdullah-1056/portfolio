@@ -96,18 +96,21 @@ export default function Home() {
 
         <section id="about-hero">
           <div className="wrap">
-            <div className="name-block">
-              <h1 dangerouslySetInnerHTML={{__html: get('about_name', 'ABDULLAH AL<br>IFAQUE.')}} />
-              <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly.')}</p>
-              <div className="btn-row">
-                <button className="btn primary">GET IN TOUCH</button>
-                <button className="btn">LEARN MORE ABOUT ME</button>
+            <div className="section-label">02 — ABOUT</div>
+            <div className="about-content">
+              <div className="name-block">
+                <h1 dangerouslySetInnerHTML={{__html: get('about_name', 'ABDULLAH AL<br>IFAQUE.')}} />
+                <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly.')}</p>
+                <div className="btn-row">
+                  <button className="btn primary">GET IN TOUCH</button>
+                  <button className="btn">LEARN MORE ABOUT ME</button>
+                </div>
               </div>
-            </div>
-            <div className="side-stats">
-              <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">University</div></div>
-              <div><div className="n">{get('stat_degree', 'CS')}</div><div className="l">Student</div></div>
-              <div><div className="n">{get('stat_year', '2024')}</div><div className="l">Current Year</div></div>
+              <div className="side-stats">
+                <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">University</div></div>
+                <div><div className="n">{get('stat_degree', 'CS')}</div><div className="l">Student</div></div>
+                <div><div className="n">{get('stat_year', '2024')}</div><div className="l">Current Year</div></div>
+              </div>
             </div>
           </div>
         </section>
@@ -129,6 +132,7 @@ export default function Home() {
 
         <section id="process">
           <div className="wrap">
+            <div className="section-label">03 — EDUCATION</div>
             <div className="process-grid">
               <div>
                 <div className="process-title">
@@ -160,6 +164,7 @@ export default function Home() {
         </section>
 
         <div id="skillset-head" className="wrap">
+          <div className="section-label">04 — SKILLS</div>
           <h3>{get('skills_heading', 'THREE-LAYER SKILL SET')}</h3>
           <div className="idx">01</div>
         </div>
@@ -191,6 +196,7 @@ export default function Home() {
 
         <section id="projects">
           <div className="wrap">
+            <div className="section-label">05 — PROJECTS</div>
             <h2>FEATURED<br/>PROJECTS</h2>
             <div className="projects-grid">
               {projects.map((project, i) => (
@@ -223,6 +229,7 @@ export default function Home() {
 
         <section id="achievements">
           <div className="wrap">
+            <div className="section-label">06 — ACHIEVEMENTS</div>
             <h2>ACHIEVEMENTS &amp;<br/>CERTIFICATES</h2>
             <div className="achievements-grid">
               {achievements.map((achievement, i) => (

@@ -85,6 +85,19 @@ section{
   border-bottom:1px solid var(--line);
 }
 
+.section-label{
+  font-size:11px;
+  letter-spacing:0.08em;
+  color:var(--text-faint);
+  margin-bottom:40px;
+  text-transform:uppercase;
+}
+
+.section-label-wrapper{
+  width:100%;
+  margin-bottom:40px;
+}
+
 .wrap{
   max-width:1600px;
   margin:0 auto;
@@ -172,6 +185,9 @@ section{
 #about-hero .wrap{
   padding-top:120px;
   padding-bottom:120px;
+}
+
+.about-content{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
@@ -336,16 +352,26 @@ section{
 #skillset-head{
   padding:60px 0 40px;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
+  flex-direction:column;
+  gap:12px;
+}
+#skillset-head .section-label{
+  margin-bottom:0;
 }
 #skillset-head h3{
   font-size:15px;
   text-transform:uppercase;
   letter-spacing:0.04em;
   font-weight:700;
+  order:2;
 }
-#skillset-head .idx{color:var(--text-faint);font-size:12px;}
+#skillset-head .idx{
+  color:var(--text-faint);
+  font-size:12px;
+  order:3;
+  align-self:flex-end;
+  margin-top:-40px;
+}
 
 .skill-row{
   display:grid;
