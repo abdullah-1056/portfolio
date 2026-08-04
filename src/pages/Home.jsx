@@ -81,15 +81,26 @@ export default function Home() {
         <section id="home">
           <div className="wrap">
             <div className="home-left">
-              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'LET\'S BUILD<br>SOMETHING GREAT.<br>MOVE IN SILENCE.')}} />
-              <p className="lead">{get('hero_subtext', 'Your next project deserves more than ordinary. Step into a space where quality is effortless, intentional, and always on.')}</p>
+              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE.<br/>SECURED.')}} />
+              <p className="lead">{get('hero_subtext', 'Building digital experiences with precision and purpose. Every project crafted with attention to detail, ensuring nothing is left half-finished.')}</p>
               <div className="btn-row">
-                <button className="btn primary">GET IN TOUCH</button>
-                <button className="btn">LEARN MORE</button>
+                <button className="btn primary">GET STARTED</button>
+                <button className="btn">LEARN HOW IT WORKS</button>
               </div>
             </div>
-            <div className="home-panel">
-              <div style={{width:'460px',maxWidth:'40vw',height:'230px',border:'1px solid var(--line)',background:'#050505'}}></div>
+            <div className="home-stats">
+              <div>
+                <div className="stat-num">45</div>
+                <div className="stat-label">NATION TRUST</div>
+              </div>
+              <div>
+                <div className="stat-num">58K+</div>
+                <div className="stat-label">USERS</div>
+              </div>
+              <div>
+                <div className="stat-num">74.5M+</div>
+                <div className="stat-label">VIRUS SCANNED</div>
+              </div>
             </div>
           </div>
         </section>

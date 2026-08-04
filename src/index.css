@@ -112,6 +112,7 @@ section{
   min-height:92vh;
   display:flex;
   align-items:center;
+  position:relative;
 }
 
 #home .wrap{
@@ -121,65 +122,101 @@ section{
   width:100%;
   padding-top:60px;
   padding-bottom:60px;
-  gap:40px;
+  gap:80px;
   flex-wrap:wrap;
 }
 
+.home-left{
+  flex:1;
+  max-width:650px;
+}
+
 .home-left h1{
-  font-size:clamp(2.4rem, 5vw, 3.6rem);
-  line-height:1.05;
-  letter-spacing:-0.01em;
+  font-size:clamp(3rem, 7vw, 5.5rem);
+  line-height:1;
+  letter-spacing:-0.02em;
   text-transform:uppercase;
   font-weight:800;
-  margin-bottom:22px;
+  margin-bottom:30px;
+  color:var(--text-primary);
 }
 
 .home-left p.lead{
-  max-width:480px;
+  max-width:520px;
   color:var(--text-dim);
-  font-size:14px;
-  margin-bottom:36px;
+  font-size:15px;
+  line-height:1.7;
+  margin-bottom:40px;
 }
 
-.btn-row{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-row{display:flex;gap:16px;flex-wrap:wrap;}
 
 .btn{
-  padding:14px 22px;
+  padding:16px 28px;
   font-size:11px;
-  letter-spacing:0.06em;
+  letter-spacing:0.08em;
   border:1px solid rgba(255,255,255,0.25);
   background:transparent;
   transition:all .25s ease;
   cursor:pointer;
   color:var(--text-primary);
+  text-transform:uppercase;
+  font-weight:600;
 }
 .btn.primary{
-  background:transparent;
-  border-color:rgba(255,255,255,0.35);
+  background:var(--text-primary);
+  color:var(--bg);
+  border-color:var(--text-primary);
 }
 .btn:hover{
   border-color:var(--accent-blue);
   color:var(--accent-blue);
 }
+.btn.primary:hover{
+  background:var(--accent-blue);
+  border-color:var(--accent-blue);
+  color:var(--bg);
+}
 
 .home-stats{
   display:flex;
   flex-direction:column;
-  gap:34px;
+  gap:50px;
   text-align:right;
-  min-width:160px;
+  min-width:180px;
+}
+.home-stats > div{
+  position:relative;
 }
 .home-stats .stat-num{
-  font-size:2.6rem;
+  font-size:3.5rem;
   font-weight:800;
   line-height:1;
+  color:var(--text-primary);
+  margin-bottom:8px;
 }
 .home-stats .stat-label{
-  font-size:10px;
+  font-size:11px;
   color:var(--text-faint);
-  letter-spacing:0.08em;
-  margin-top:6px;
+  letter-spacing:0.1em;
   text-transform:uppercase;
+  font-weight:500;
+}
+
+@media (max-width:900px){
+  #home .wrap{
+    gap:50px;
+  }
+  .home-stats{
+    flex-direction:row;
+    justify-content:space-between;
+    width:100%;
+    text-align:center;
+    gap:20px;
+  }
+  .home-stats .stat-num{
+    font-size:2.5rem;
+  }
 }
 
 #about-hero .wrap{
