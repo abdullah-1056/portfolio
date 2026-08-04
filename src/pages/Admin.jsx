@@ -63,6 +63,7 @@ function AdminDashboard({ logout }) {
   const [triplets, setTriplets] = useState([])
   const [steps, setSteps] = useState([])
   const [skills, setSkills] = useState([])
+  const [achievements, setAchievements] = useState([])
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
@@ -74,12 +75,14 @@ function AdminDashboard({ logout }) {
       supabase.from('site_content').select('*'),
       supabase.from('triplet_items').select('*').order('order'),
       supabase.from('process_steps').select('*').order('order'),
-      supabase.from('skills').select('*').order('order')
-    ]).then(([c, t, p, s]) => {
+      supabase.from('skills').select('*').order('order'),
+      supabase.from('achievements').select('*').order('order')
+    ]).then(([c, t, p, s, a]) => {
       setContent(Object.fromEntries((c.data || []).map(r => [r.key, r.value])))
       setTriplets(t.data || [])
       setSteps(p.data || [])
       setSkills(s.data || [])
+      setAchievements(a.data || [])
     })
   }
 
@@ -107,6 +110,13 @@ function AdminDashboard({ logout }) {
     const item = skills.find(s => s.id === id)
     const updated = { ...item, [field]: field === 'tags' ? value.split(',').map(t => t.trim()) : value }
     const { error } = await supabase.from('skills').update(updated).eq('id', id)
+    if (error) setMsg(error.message)
+    else { setMsg('Saved!'); setTimeout(() => setMsg(''), 2000); load() }
+  }
+
+  const updateAchievement = async (id, field, value) => {
+    const item = achievements.find(a => a.id === id)
+    const { error } = await supabase.from('achievements').update({ ...item, [field]: value }).eq('id', id)
     if (error) setMsg(error.message)
     else { setMsg('Saved!'); setTimeout(() => setMsg(''), 2000); load() }
   }
@@ -170,6 +180,19 @@ function AdminDashboard({ logout }) {
         <Input label="Copyright" value={content.footer_copyright || ''} onChange={v => { setContent({...content, footer_copyright: v}); updateContent('footer_copyright', v) }} />
         <Input label="LinkedIn URL" value={content.social_linkedin || ''} onChange={v => { setContent({...content, social_linkedin: v}); updateContent('social_linkedin', v) }} />
         <Input label="GitHub URL" value={content.social_github || ''} onChange={v => { setContent({...content, social_github: v}); updateContent('social_github', v) }} />
+      </Section>
+
+      <Section title="Achievements & Certificates">
+        {achievements.map((a, i) => (
+          <div key={a.id} style={{marginBottom:'20px',paddingBottom:'20px',borderBottom:'1px solid var(--line)'}}>
+            <div style={{fontSize:'10px',color:'var(--text-faint)',marginBottom:'8px'}}>ACHIEVEMENT {i + 1}</div>
+            <Input label="Title" value={a.title} onChange={v => updateAchievement(a.id, 'title', v)} />
+            <Input label="Issuer" value={a.issuer} onChange={v => updateAchievement(a.id, 'issuer', v)} />
+            <Input label="Date" value={a.date} onChange={v => updateAchievement(a.id, 'date', v)} />
+            <Textarea label="Description" value={a.description} onChange={v => updateAchievement(a.id, 'description', v)} />
+            <Input label="Credential URL" value={a.credential_url || ''} onChange={v => updateAchievement(a.id, 'credential_url', v)} />
+          </div>
+        ))}
       </Section>
     </div>
   )

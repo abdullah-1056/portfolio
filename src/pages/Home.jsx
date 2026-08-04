@@ -25,20 +25,27 @@ export default function Home() {
       icon_svg: '<svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1"><polygon points="50,5 95,27 95,73 50,95 5,73 5,27" /><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="27" x2="95" y2="73"/><line x1="95" y1="27" x2="5" y2="73"/></svg>'
     }
   ])
+  const [achievements, setAchievements] = useState([
+    { id: 1, title: 'React Developer Certification', issuer: 'Meta', date: '2024', description: 'Advanced React patterns and best practices certification from Meta.', credential_url: '#' },
+    { id: 2, title: 'Full Stack Web Development', issuer: 'freeCodeCamp', date: '2023', description: 'Completed 300+ hours of full stack development coursework and projects.', credential_url: '#' },
+    { id: 3, title: 'UI/UX Design Fundamentals', issuer: 'Google', date: '2023', description: 'User experience design principles and prototyping certification.', credential_url: '#' }
+  ])
 
   useEffect(() => {
     Promise.all([
       supabase.from('site_content').select('*'),
       supabase.from('triplet_items').select('*').order('order'),
       supabase.from('process_steps').select('*').order('order'),
-      supabase.from('skills').select('*').order('order')
-    ]).then(([c, t, p, s]) => {
+      supabase.from('skills').select('*').order('order'),
+      supabase.from('achievements').select('*').order('order')
+    ]).then(([c, t, p, s, a]) => {
       if (c.data && c.data.length > 0) {
         setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
       }
       if (t.data && t.data.length > 0) setTriplets(t.data)
       if (p.data && p.data.length > 0) setSteps(p.data)
       if (s.data && s.data.length > 0) setSkills(s.data)
+      if (a.data && a.data.length > 0) setAchievements(a.data)
     })
   }, [])
 
@@ -170,6 +177,30 @@ export default function Home() {
             <h2 dangerouslySetInnerHTML={{__html: get('qualities_heading', 'ESSENTIAL QUALITIES FOR A<br>MODERN DEVELOPER')}} />
             <div className="divider"></div>
             <div className="cursor-circle"><span></span></div>
+          </div>
+        </section>
+
+        <section id="achievements">
+          <div className="wrap">
+            <h2>ACHIEVEMENTS &<br>CERTIFICATES</h2>
+            <div className="achievements-grid">
+              {achievements.map((achievement, i) => (
+                <div key={achievement.id} className="achievement-card">
+                  <div className="achievement-number">{String(i + 1).padStart(2, '0')}</div>
+                  <h3>{achievement.title}</h3>
+                  <div className="achievement-meta">
+                    <span className="issuer">{achievement.issuer}</span>
+                    <span className="date">{achievement.date}</span>
+                  </div>
+                  <p>{achievement.description}</p>
+                  {achievement.credential_url && achievement.credential_url !== '#' && (
+                    <a href={achievement.credential_url} target="_blank" rel="noopener" className="credential-link">
+                      View Credential →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

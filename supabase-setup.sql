@@ -55,6 +55,18 @@ CREATE TABLE IF NOT EXISTS education (
   description TEXT
 );
 
+-- Achievements & Certificates
+CREATE TABLE IF NOT EXISTS achievements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "order" INT NOT NULL,
+  title TEXT,
+  issuer TEXT,
+  date TEXT,
+  description TEXT,
+  credential_url TEXT,
+  image_url TEXT
+);
+
 -- Row Level Security (RLS)
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE triplet_items ENABLE ROW LEVEL SECURITY;
@@ -62,6 +74,9 @@ ALTER TABLE process_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE education ENABLE ROW LEVEL SECURITY;
+
+-- Row Level Security (RLS) for achievements
+ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 
 -- Public read access
 CREATE POLICY "Public read site_content" ON site_content FOR SELECT USING (true);
@@ -71,6 +86,9 @@ CREATE POLICY "Public read skills" ON skills FOR SELECT USING (true);
 CREATE POLICY "Public read projects" ON projects FOR SELECT USING (true);
 CREATE POLICY "Public read education" ON education FOR SELECT USING (true);
 
+-- Public read access for achievements
+CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true);
+
 -- Authenticated write access
 CREATE POLICY "Authenticated write site_content" ON site_content FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write triplet_items" ON triplet_items FOR ALL USING (auth.role() = 'authenticated');
@@ -78,6 +96,9 @@ CREATE POLICY "Authenticated write process_steps" ON process_steps FOR ALL USING
 CREATE POLICY "Authenticated write skills" ON skills FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write projects" ON projects FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated write education" ON education FOR ALL USING (auth.role() = 'authenticated');
+
+-- Authenticated write access for achievements
+CREATE POLICY "Authenticated write achievements" ON achievements FOR ALL USING (auth.role() = 'authenticated');
 
 -- Seed data
 INSERT INTO site_content (key, value) VALUES
@@ -119,4 +140,11 @@ INSERT INTO skills ("order", category, description, tags, icon_svg) VALUES
   (1, 'WEB DEVELOPMENT', 'Every project begins with clean, maintainable code that brings ideas to life with modern frameworks and best practices.', 
    ARRAY['REACT & TYPESCRIPT', 'UI/UX DESIGN'], 
    '<svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1"><polygon points="50,5 95,27 95,73 50,95 5,73 5,27" /><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="27" x2="95" y2="73"/><line x1="95" y1="27" x2="5" y2="73"/></svg>')
+ON CONFLICT DO NOTHING;
+
+-- Seed data for achievements
+INSERT INTO achievements ("order", title, issuer, date, description, credential_url) VALUES
+  (1, 'React Developer Certification', 'Meta', '2024', 'Advanced React patterns and best practices certification from Meta.', '#'),
+  (2, 'Full Stack Web Development', 'freeCodeCamp', '2023', 'Completed 300+ hours of full stack development coursework and projects.', '#'),
+  (3, 'UI/UX Design Fundamentals', 'Google', '2023', 'User experience design principles and prototyping certification.', '#')
 ON CONFLICT DO NOTHING;
