@@ -88,20 +88,6 @@ export default function Home() {
                 <button className="btn">LEARN HOW IT WORKS</button>
               </div>
             </div>
-            <div className="home-stats">
-              <div>
-                <div className="stat-num">45</div>
-                <div className="stat-label">NATION TRUST</div>
-              </div>
-              <div>
-                <div className="stat-num">58K+</div>
-                <div className="stat-label">USERS</div>
-              </div>
-              <div>
-                <div className="stat-num">74.5M+</div>
-                <div className="stat-label">VIRUS SCANNED</div>
-              </div>
-            </div>
           </div>
         </section>
 
