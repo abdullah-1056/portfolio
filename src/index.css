@@ -66,14 +66,15 @@ nav ul{
 }
 
 nav a{
-  font-size:11px;
-  letter-spacing:0.03em;
+  font-size:13px;
+  letter-spacing:0.05em;
   color:var(--text-faint);
   transition:color .25s ease;
   white-space:nowrap;
+  font-weight:500;
 }
 nav a:hover{color:var(--text-primary);}
-nav a .num{color:var(--text-faint);opacity:0.6;margin-right:4px;}
+nav a .num{color:var(--text-faint);opacity:0.6;margin-right:6px;}
 
 @media (max-width: 900px){
   nav ul{display:none;}
