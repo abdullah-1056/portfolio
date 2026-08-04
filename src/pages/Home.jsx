@@ -82,10 +82,24 @@ export default function Home() {
           <div className="wrap">
             <div className="home-left">
               <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE.<br/>SECURED.')}} />
-              <p className="lead">{get('hero_subtext', 'Building digital experiences with precision and purpose. Every project crafted with attention to detail, ensuring nothing is left half-finished.')}</p>
+              <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
               <div className="btn-row">
                 <button className="btn primary">GET STARTED</button>
                 <button className="btn">LEARN HOW IT WORKS</button>
+              </div>
+            </div>
+            <div className="home-stats">
+              <div>
+                <div className="stat-num">45</div>
+                <div className="stat-label">NATION TRUST</div>
+              </div>
+              <div>
+                <div className="stat-num">58K+</div>
+                <div className="stat-label">USERS</div>
+              </div>
+              <div>
+                <div className="stat-num">74.5M+</div>
+                <div className="stat-label">VIRUS SCANNED</div>
               </div>
             </div>
           </div>

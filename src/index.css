@@ -117,16 +117,18 @@ section{
 
 #home .wrap{
   display:flex;
-  justify-content:center;
+  justify-content:space-between;
   align-items:center;
   width:100%;
   padding-top:60px;
   padding-bottom:60px;
+  gap:80px;
 }
 
 .home-left{
-  max-width:800px;
-  text-align:center;
+  flex:1;
+  max-width:650px;
+  text-align:left;
 }
 
 .home-left h1{
@@ -140,16 +142,14 @@ section{
 }
 
 .home-left p.lead{
-  max-width:600px;
-  margin-left:auto;
-  margin-right:auto;
+  max-width:520px;
   color:var(--text-dim);
   font-size:15px;
   line-height:1.7;
   margin-bottom:40px;
 }
 
-.btn-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+.btn-row{display:flex;gap:16px;flex-wrap:wrap;}
 
 .btn{
   padding:16px 28px;
@@ -176,6 +176,47 @@ section{
   background:var(--accent-blue);
   border-color:var(--accent-blue);
   color:var(--bg);
+}
+
+.home-stats{
+  display:flex;
+  flex-direction:column;
+  gap:50px;
+  text-align:right;
+  min-width:180px;
+}
+.home-stats > div{
+  position:relative;
+}
+.home-stats .stat-num{
+  font-size:3.5rem;
+  font-weight:800;
+  line-height:1;
+  color:var(--text-primary);
+  margin-bottom:8px;
+}
+.home-stats .stat-label{
+  font-size:11px;
+  color:var(--text-faint);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  font-weight:500;
+}
+
+@media (max-width:900px){
+  #home .wrap{
+    gap:50px;
+  }
+  .home-stats{
+    flex-direction:row;
+    justify-content:space-between;
+    width:100%;
+    text-align:center;
+    gap:20px;
+  }
+  .home-stats .stat-num{
+    font-size:2.5rem;
+  }
 }
 
 #about-hero .wrap{
