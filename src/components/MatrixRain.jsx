@@ -19,9 +19,9 @@ export default function MatrixRain() {
     window.addEventListener('resize', resize)
 
     function draw(){
-      ctx.fillStyle = 'rgba(10,10,10,0.08)'
+      ctx.fillStyle = 'rgba(10,10,10,0.05)'
       ctx.fillRect(0,0,w,h)
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'
+      ctx.fillStyle = 'rgba(150,255,150,0.8)'
       ctx.font = '14px monospace'
       for(let i=0;i<drops.length;i++){
         const text = chars[Math.floor(Math.random()*chars.length)]
