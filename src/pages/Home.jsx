@@ -30,6 +30,11 @@ export default function Home() {
     { id: 2, title: 'Full Stack Web Development', issuer: 'freeCodeCamp', date: '2023', description: 'Completed 300+ hours of full stack development coursework and projects.', credential_url: '#' },
     { id: 3, title: 'UI/UX Design Fundamentals', issuer: 'Google', date: '2023', description: 'User experience design principles and prototyping certification.', credential_url: '#' }
   ])
+  const [projects, setProjects] = useState([
+    { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
+    { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
+    { id: 3, title: 'Portfolio CMS', description: 'Self-editable portfolio website with admin panel for content management without touching code.', tags: ['React', 'Supabase', 'Vite'], live_url: '#', repo_url: '#' }
+  ])
 
   useEffect(() => {
     Promise.all([
@@ -37,8 +42,9 @@ export default function Home() {
       supabase.from('triplet_items').select('*').order('order'),
       supabase.from('process_steps').select('*').order('order'),
       supabase.from('skills').select('*').order('order'),
-      supabase.from('achievements').select('*').order('order')
-    ]).then(([c, t, p, s, a]) => {
+      supabase.from('achievements').select('*').order('order'),
+      supabase.from('projects').select('*').order('order')
+    ]).then(([c, t, p, s, a, pr]) => {
       if (c.data && c.data.length > 0) {
         setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
       }
@@ -46,6 +52,7 @@ export default function Home() {
       if (p.data && p.data.length > 0) setSteps(p.data)
       if (s.data && s.data.length > 0) setSkills(s.data)
       if (a.data && a.data.length > 0) setAchievements(a.data)
+      if (pr.data && pr.data.length > 0) setProjects(pr.data)
     })
   }, [])
 
@@ -63,8 +70,9 @@ export default function Home() {
               <li><a href="#about-hero"><span className="num">02</span>ABOUT</a></li>
               <li><a href="#process"><span className="num">03</span>EDUCATION</a></li>
               <li><a href="#skillset-head"><span className="num">04</span>SKILLS</a></li>
-              <li><a href="#qualities"><span className="num">05</span>PROJECTS</a></li>
-              <li><a href="#contact"><span className="num">06</span>CONTACT</a></li>
+              <li><a href="#projects"><span className="num">05</span>PROJECTS</a></li>
+              <li><a href="#achievements"><span className="num">06</span>ACHIEVEMENTS</a></li>
+              <li><a href="#contact"><span className="num">07</span>CONTACT</a></li>
             </ul>
           </nav>
         </header>
@@ -180,9 +188,41 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="projects">
+          <div className="wrap">
+            <h2>FEATURED<br/>PROJECTS</h2>
+            <div className="projects-grid">
+              {projects.map((project, i) => (
+                <div key={project.id} className="project-card">
+                  <div className="project-number">{String(i + 1).padStart(2, '0')}</div>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                  <div className="project-tags">
+                    {(project.tags || []).map((tag, idx) => (
+                      <span key={idx} className="project-tag">{tag}</span>
+                    ))}
+                  </div>
+                  <div className="project-links">
+                    {project.live_url && project.live_url !== '#' && (
+                      <a href={project.live_url} target="_blank" rel="noopener" className="project-link">
+                        Live Demo →
+                      </a>
+                    )}
+                    {project.repo_url && project.repo_url !== '#' && (
+                      <a href={project.repo_url} target="_blank" rel="noopener" className="project-link">
+                        GitHub →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="achievements">
           <div className="wrap">
-            <h2>ACHIEVEMENTS &<br>CERTIFICATES</h2>
+            <h2>ACHIEVEMENTS &amp;<br/>CERTIFICATES</h2>
             <div className="achievements-grid">
               {achievements.map((achievement, i) => (
                 <div key={achievement.id} className="achievement-card">

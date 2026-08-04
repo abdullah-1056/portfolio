@@ -64,6 +64,7 @@ function AdminDashboard({ logout }) {
   const [steps, setSteps] = useState([])
   const [skills, setSkills] = useState([])
   const [achievements, setAchievements] = useState([])
+  const [projects, setProjects] = useState([])
   const [msg, setMsg] = useState('')
 
   useEffect(() => {
@@ -76,13 +77,15 @@ function AdminDashboard({ logout }) {
       supabase.from('triplet_items').select('*').order('order'),
       supabase.from('process_steps').select('*').order('order'),
       supabase.from('skills').select('*').order('order'),
-      supabase.from('achievements').select('*').order('order')
-    ]).then(([c, t, p, s, a]) => {
+      supabase.from('achievements').select('*').order('order'),
+      supabase.from('projects').select('*').order('order')
+    ]).then(([c, t, p, s, a, pr]) => {
       setContent(Object.fromEntries((c.data || []).map(r => [r.key, r.value])))
       setTriplets(t.data || [])
       setSteps(p.data || [])
       setSkills(s.data || [])
       setAchievements(a.data || [])
+      setProjects(pr.data || [])
     })
   }
 
@@ -117,6 +120,14 @@ function AdminDashboard({ logout }) {
   const updateAchievement = async (id, field, value) => {
     const item = achievements.find(a => a.id === id)
     const { error } = await supabase.from('achievements').update({ ...item, [field]: value }).eq('id', id)
+    if (error) setMsg(error.message)
+    else { setMsg('Saved!'); setTimeout(() => setMsg(''), 2000); load() }
+  }
+
+  const updateProject = async (id, field, value) => {
+    const item = projects.find(pr => pr.id === id)
+    const updated = { ...item, [field]: field === 'tags' ? value.split(',').map(t => t.trim()) : value }
+    const { error } = await supabase.from('projects').update(updated).eq('id', id)
     if (error) setMsg(error.message)
     else { setMsg('Saved!'); setTimeout(() => setMsg(''), 2000); load() }
   }
@@ -191,6 +202,19 @@ function AdminDashboard({ logout }) {
             <Input label="Date" value={a.date} onChange={v => updateAchievement(a.id, 'date', v)} />
             <Textarea label="Description" value={a.description} onChange={v => updateAchievement(a.id, 'description', v)} />
             <Input label="Credential URL" value={a.credential_url || ''} onChange={v => updateAchievement(a.id, 'credential_url', v)} />
+          </div>
+        ))}
+      </Section>
+
+      <Section title="Projects">
+        {projects.map((pr, i) => (
+          <div key={pr.id} style={{marginBottom:'20px',paddingBottom:'20px',borderBottom:'1px solid var(--line)'}}>
+            <div style={{fontSize:'10px',color:'var(--text-faint)',marginBottom:'8px'}}>PROJECT {i + 1}</div>
+            <Input label="Title" value={pr.title} onChange={v => updateProject(pr.id, 'title', v)} />
+            <Textarea label="Description" value={pr.description} onChange={v => updateProject(pr.id, 'description', v)} />
+            <Input label="Tags (comma separated)" value={(pr.tags || []).join(', ')} onChange={v => updateProject(pr.id, 'tags', v)} />
+            <Input label="Live URL" value={pr.live_url || ''} onChange={v => updateProject(pr.id, 'live_url', v)} />
+            <Input label="Repository URL" value={pr.repo_url || ''} onChange={v => updateProject(pr.id, 'repo_url', v)} />
           </div>
         ))}
       </Section>
