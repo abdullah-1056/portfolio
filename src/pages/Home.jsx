@@ -22,21 +22,24 @@ export default function Home() {
     category: "Programming & Web Development",
     description: "Languages: C, C++, SQL, PHP, HTML5, CSS3. Database design and management with MySQL, including ER modelling, schema normalization, joins, constraints, indexing, and query optimization. Server-side scripting with front-end and back-end integration, form handling, and responsive layouts.",
     tags: ["C / C++", "SQL", "PHP", "HTML5 / CSS3", "MySQL"],
-    icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`
+    icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`,
+    image_url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop&q=80"
   },
   {
     id: 2,
     category: "Security & Networking",
     description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
     tags: ["Linux CLI", "Wireshark ", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
-    icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`
+    icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`,
+    image_url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=400&fit=crop&q=80"
   },
   {
     id: 3,
     category: "Tools & Practice",
     description: "Version control and collaboration with Git and GitHub. Development environments including VS Code and Eclipse. Project management with Trello following Agile/Scrum methodology. Additional proficiency in AutoCAD and Docker for design and containerization workflows.",
     tags: ["Git / GitHub", "VS Code / Eclipse", "Agile / Scrum", "Docker", "AutoCAD"],
-    icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`
+    icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`,
+    image_url: "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=400&fit=crop&q=80"
   }
 ];
   const [achievements, setAchievements] = useState([])
