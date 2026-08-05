@@ -16,15 +16,29 @@ export default function Home() {
     { id: 3, step_number: '03', title: 'DEVELOP & ITERATE', body: 'Code is written with precision using modern tools and frameworks. Continuous iteration ensures quality at every stage.' },
     { id: 4, step_number: '04', title: 'DELIVER & REFINE', body: 'The final product is polished and delivered with care. Feedback is welcomed to continuously improve and refine the work.' }
   ])
-  const [skills, setSkills] = useState([
-    { 
-      id: 1, 
-      category: 'WEB DEVELOPMENT', 
-      description: 'Every project begins with clean, maintainable code that brings ideas to life with modern frameworks and best practices.',
-      tags: ['REACT & TYPESCRIPT', 'UI/UX DESIGN'],
-      icon_svg: '<svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1"><polygon points="50,5 95,27 95,73 50,95 5,73 5,27" /><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="27" x2="95" y2="73"/><line x1="95" y1="27" x2="5" y2="73"/></svg>'
-    }
-  ])
+  const skills = [
+  {
+    id: 1,
+    category: "Programming & Web Development",
+    description: "Languages: C, C++, SQL, PHP, HTML5, CSS3. Database design and management with MySQL, including ER modelling, schema normalization, joins, constraints, indexing, and query optimization. Server-side scripting with front-end and back-end integration, form handling, and responsive layouts.",
+    tags: ["C / C++", "SQL", "PHP", "HTML5 / CSS3", "MySQL"],
+    icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`
+  },
+  {
+    id: 2,
+    category: "Security & Networking",
+    description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
+    tags: ["Linux CLI", "Web Exploitation", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
+    icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`
+  },
+  {
+    id: 3,
+    category: "Tools & Practice",
+    description: "Version control and collaboration with Git and GitHub. Development environments including VS Code and Eclipse. Project management with Trello following Agile/Scrum methodology. Additional proficiency in AutoCAD and Docker for design and containerization workflows.",
+    tags: ["Git / GitHub", "VS Code / Eclipse", "Agile / Scrum", "Docker", "AutoCAD"],
+    icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`
+  }
+];
   const [achievements, setAchievements] = useState([])
   const [projects, setProjects] = useState([
     { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
@@ -85,7 +99,7 @@ export default function Home() {
         <section id="home">
           <div className="wrap">
             <div className="home-left">
-              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE.<br/>SECURED.')}} />
+              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE <br/>SECURED.')}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
               <div className="btn-row">
                 <button className="btn primary">GET STARTED →</button>
@@ -113,20 +127,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="statement">
-          <div className="wrap">
-            <div className="divider"></div>
-            <div className="cursor-circle"><span></span></div>
-            <div className="triplet">
-              {triplets.map(t => (
-                <div key={t.id}>
-                  <h3>{t.title}</h3>
-                  <p>{t.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         <section id="process">
           <div className="wrap">
@@ -161,36 +162,41 @@ export default function Home() {
           <div className="calm-arrow">&#8599;</div>
         </section>
 
-        <div id="skillset-head" className="wrap">
-          <div className="section-label">04 — SKILLS</div>
-          <h3>{get('skills_heading', 'THREE-LAYER SKILL SET')}</h3>
-          <div className="idx">01</div>
-        </div>
-
-        {skills.map(skill => (
-          <div key={skill.id} className="skill-row">
-            <div className="left-col">
-              <div className="skill-cat">{skill.category}</div>
-              <p>{skill.description}</p>
-              <div className="tag-row">
-                {(skill.tags || []).map((tag, i) => (
-                  <div key={i} className="tag">{tag}</div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="icon-box" dangerouslySetInnerHTML={{__html: skill.icon_svg}} />
-            </div>
+        <section id="skills-section">
+          <div id="skillset-head" className="wrap">
+            <div className="section-label">04 — SKILLS</div>
+            <h3>{get('skills_heading', 'THREE-LAYER SKILL SET')}</h3>
           </div>
-        ))}
 
-        <section id="qualities">
-          <div className="wrap">
-            <h2 dangerouslySetInnerHTML={{__html: get('qualities_heading', 'ESSENTIAL QUALITIES FOR A<br>MODERN DEVELOPER')}} />
-            <div className="divider"></div>
-            <div className="cursor-circle"><span></span></div>
+          <div className="skills-list">
+            {skills.map((skill, i) => (
+              <div key={skill.id} className="skill-row">
+                <div className="wrap skill-row-inner">
+                  <div className="left-col">
+                    <div className="skill-num">{String(i + 1).padStart(2, '0')}</div>
+                    <div className="skill-cat">{skill.category}</div>
+                    <p>{skill.description}</p>
+                    <div className="tag-row">
+                      {(skill.tags || []).map((tag, idx) => (
+                        <div key={idx} className="tag">{tag}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="right-col">
+                    <div className="icon-box" dangerouslySetInnerHTML={{__html: skill.icon_svg}} />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
+
+<section id="qualities">
+  <div className="wrap">
+    <h2 dangerouslySetInnerHTML={{__html: get('qualities_heading', 'ESSENTIAL QUALITIES FOR A<br>MODERN DEVELOPER')}} />
+    <div className="divider"></div>
+  </div>
+</section>
 
         <section id="projects">
           <div className="wrap">
@@ -264,6 +270,20 @@ export default function Home() {
               </div>
             </div>
 
+          </div>
+        </section>
+
+                <section className="statement">
+          <div className="wrap">
+            <div className="divider">statement</div>
+            <div className="triplet">
+              {triplets.map(t => (
+                <div key={t.id}>
+                  <h3>{t.title}</h3>
+                  <p>{t.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
