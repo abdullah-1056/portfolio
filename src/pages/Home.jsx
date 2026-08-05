@@ -31,7 +31,11 @@ export default function Home() {
     description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
     tags: ["Linux CLI", "Wireshark ", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
     icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: ""
+    image_url: "",
+    writeup: {
+      label: "OverTheWire — Natas Writeup",
+      url: "https://drive.google.com/drive/folders/1hB0qNbx0AKG3nutLKbeQI2m7ZUMp1kTa?usp=sharing"
+    }
   },
   {
     id: 3,
@@ -231,6 +235,18 @@ export default function Home() {
                         <div key={idx} className="tag">{tag}</div>
                       ))}
                     </div>
+                    {skill.writeup && (
+                      <a
+                        href={skill.writeup.url}
+                        target="_blank"
+                        rel="noopener"
+                        className="skill-writeup-link"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        {skill.writeup.label}
+                        <svg className="writeup-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                      </a>
+                    )}
                   </div>
                   <div className="right-col">
                     <div className="icon-box">

@@ -590,6 +590,40 @@ section{
   color:var(--accent-blue);
 }
 
+.skill-writeup-link{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:24px;
+  padding:12px 20px;
+  border:1px solid rgba(94,200,248,0.3);
+  color:var(--accent-blue);
+  font-size:12px;
+  letter-spacing:0.05em;
+  text-decoration:none;
+  text-transform:uppercase;
+  font-weight:600;
+  transition:all 0.3s ease;
+  background:rgba(94,200,248,0.04);
+  width:fit-content;
+}
+.skill-writeup-link:hover{
+  border-color:var(--accent-blue);
+  background:rgba(94,200,248,0.1);
+}
+.skill-writeup-link svg:first-child{
+  opacity:0.7;
+  flex-shrink:0;
+}
+.writeup-arrow{
+  transition:transform 0.3s ease;
+  opacity:0.7;
+}
+.skill-writeup-link:hover .writeup-arrow{
+  transform:translate(3px,-3px);
+  opacity:1;
+}
+
 .right-col{
   display:flex;
   align-items:center;
