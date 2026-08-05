@@ -28,7 +28,7 @@ export default function Home() {
     id: 2,
     category: "Security & Networking",
     description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
-    tags: ["Linux CLI", "Web Exploitation", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
+    tags: ["Linux CLI", "Wireshark ", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
     icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`
   },
   {
@@ -183,7 +183,12 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="right-col">
-                    <div className="icon-box" dangerouslySetInnerHTML={{__html: skill.icon_svg}} />
+                    <div className="icon-box">
+                      {skill.image_url
+                        ? <img src={skill.image_url} alt={skill.category} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
+                        : <div dangerouslySetInnerHTML={{__html: skill.icon_svg}} />
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
@@ -191,12 +196,7 @@ export default function Home() {
           </div>
         </section>
 
-<section id="qualities">
-  <div className="wrap">
-    <h2 dangerouslySetInnerHTML={{__html: get('qualities_heading', 'ESSENTIAL QUALITIES FOR A<br>MODERN DEVELOPER')}} />
-    <div className="divider"></div>
-  </div>
-</section>
+
 
         <section id="projects">
           <div className="wrap">

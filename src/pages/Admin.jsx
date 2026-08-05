@@ -182,6 +182,7 @@ function AdminDashboard({ logout }) {
             <Textarea label="Description" value={s.description} onChange={v => updateSkill(s.id, 'description', v)} />
             <Input label="Tags (comma separated)" value={(s.tags || []).join(', ')} onChange={v => updateSkill(s.id, 'tags', v)} />
             <Textarea label="Icon SVG" value={s.icon_svg} onChange={v => updateSkill(s.id, 'icon_svg', v)} />
+            <Input label="Image URL (overrides icon)" value={s.image_url || ''} onChange={v => updateSkill(s.id, 'image_url', v)} />
           </div>
         ))}
       </Section>

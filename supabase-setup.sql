@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS skills (
   category TEXT,
   description TEXT,
   tags TEXT[],
-  icon_svg TEXT
+  icon_svg TEXT,
+  image_url TEXT
 );
 
 -- Projects (portfolio items)
