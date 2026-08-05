@@ -25,11 +25,7 @@ export default function Home() {
       icon_svg: '<svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1"><polygon points="50,5 95,27 95,73 50,95 5,73 5,27" /><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="27" x2="95" y2="73"/><line x1="95" y1="27" x2="5" y2="73"/></svg>'
     }
   ])
-  const [achievements, setAchievements] = useState([
-    { id: 1, title: 'React Developer Certification', issuer: 'Meta', date: '2024', description: 'Advanced React patterns and best practices certification from Meta.', credential_url: '#' },
-    { id: 2, title: 'Full Stack Web Development', issuer: 'freeCodeCamp', date: '2023', description: 'Completed 300+ hours of full stack development coursework and projects.', credential_url: '#' },
-    { id: 3, title: 'UI/UX Design Fundamentals', issuer: 'Google', date: '2023', description: 'User experience design principles and prototyping certification.', credential_url: '#' }
-  ])
+  const [achievements, setAchievements] = useState([])
   const [projects, setProjects] = useState([
     { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
     { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
@@ -58,6 +54,14 @@ export default function Home() {
   }, [])
 
   const get = (key, fallback = '') => content[key] || fallback
+  const achievementsDriveUrl = 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing'
+  const certificatesDriveUrl = 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing'
+  const hiddenAchievements = [
+    ['React Developer Certification', 'Meta'],
+    ['Full Stack Web Development', 'freeCodeCamp'],
+    ['UI/UX Design Fundamentals', 'Google']
+  ]
+  const visibleAchievements = achievements.filter(achievement => !hiddenAchievements.some(([title, issuer]) => achievement.title === title && achievement.issuer === issuer))
 
   return (
     <>
@@ -67,13 +71,13 @@ export default function Home() {
           <div className="logo"><span className="diamond">&#9670;</span> {get('header_name', 'ABDULLAH AL IFAQUE')}</div>
           <nav>
             <ul>
-              <li><a href="#home"><span className="num">01</span>HOME</a></li>
-              <li><a href="#about-hero"><span className="num">02</span>ABOUT</a></li>
-              <li><a href="#process"><span className="num">03</span>EDUCATION</a></li>
-              <li><a href="#skillset-head"><span className="num">04</span>SKILLS</a></li>
-              <li><a href="#projects"><span className="num">05</span>PROJECTS</a></li>
-              <li><a href="#achievements"><span className="num">06</span>ACHIEVEMENTS</a></li>
-              <li><a href="#contact"><span className="num">07</span>CONTACT</a></li>
+              <li><a href="#home">HOME</a></li>
+              <li><a href="#about-hero">ABOUT</a></li>
+              <li><a href="#process">EDUCATION</a></li>
+              <li><a href="#skillset-head">SKILLS</a></li>
+              <li><a href="#projects">PROJECTS</a></li>
+              <li><a href="#achievements">ACHIEVEMENTS</a></li>
+              <li><a href="#contact">CONTACT</a></li>
             </ul>
           </nav>
         </header>
@@ -81,12 +85,8 @@ export default function Home() {
         <section id="home">
           <div className="wrap">
             <div className="home-left">
-              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE.<br/>SECURED.')}} />
+              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR <br/> SILENCE <br/>SECURED.')}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
-              <div className="btn-row">
-                <button className="btn primary">GET STARTED</button>
-                <button className="btn">LEARN HOW IT WORKS</button>
-              </div>
             </div>
           </div>
         </section>
@@ -96,17 +96,14 @@ export default function Home() {
             <div className="section-label">02 — ABOUT</div>
             <div className="about-content">
               <div className="name-block">
+                <br />
                 <h1 dangerouslySetInnerHTML={{__html: get('about_name', 'ABDULLAH AL<br>IFAQUE.')}} />
                 <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly.')}</p>
-                <div className="btn-row">
-                  <button className="btn primary">GET IN TOUCH</button>
-                  <button className="btn">LEARN MORE ABOUT ME</button>
-                </div>
               </div>
               <div className="side-stats">
                 <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">University</div></div>
-                <div><div className="n">{get('stat_degree', 'CS')}</div><div className="l">Student</div></div>
-                <div><div className="n">{get('stat_year', '2024')}</div><div className="l">Current Year</div></div>
+                <div><div className="n">{get('stat_degree', 'CSE')}</div><div className="l">Student</div></div>
+                <div><div className="n">{get('stat_year', '2026')}</div><div className="l">Batch</div></div>
               </div>
             </div>
           </div>
@@ -228,8 +225,22 @@ export default function Home() {
           <div className="wrap">
             <div className="section-label">06 — ACHIEVEMENTS</div>
             <h2>ACHIEVEMENTS &amp;<br/>CERTIFICATES</h2>
+            <div className="achievement-overview">
+              <a className="overview-card overview-card-primary" href={achievementsDriveUrl} target="_blank" rel="noopener">
+                <div className="overview-card-index">01</div>
+                <h3>Achievements</h3>
+                <p>Open my Google Drive folder to view all achievement files and proof of work.</p>
+                <span className="overview-card-cta">Open Drive →</span>
+              </a>
+              <a className="overview-card" href={certificatesDriveUrl} target="_blank" rel="noopener">
+                <div className="overview-card-index">02</div>
+                <h3>Certificates</h3>
+                <p>Open my certificate folder on Google Drive to view all certificates.</p>
+                <span className="overview-card-cta">Open Certificates →</span>
+              </a>
+            </div>
             <div className="achievements-grid">
-              {achievements.map((achievement, i) => (
+              {visibleAchievements.map((achievement, i) => (
                 <div key={achievement.id} className="achievement-card">
                   <div className="achievement-number">{String(i + 1).padStart(2, '0')}</div>
                   <h3>{achievement.title}</h3>
@@ -364,14 +375,41 @@ export default function Home() {
               <a href="#process">PROCESS</a>
               <a href="#contact">CONTACT</a>
             </div>
-            <div className="foot-wordmark">
-              <h2>{get('footer_wordmark', 'IFAQUE')}</h2>
+            <div className="foot-top">
+              <div className="foot-wordmark">
+                <h2>{get('footer_wordmark', 'IFAQUE')}</h2>
+              </div>
+              <div className="foot-contact">
+                <div className="foot-contact-label">GET IN TOUCH</div>
+              <a href="mailto:mdabdullah2002111@gmail.com" className="foot-email">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+                mdabdullah2002111@gmail.com
+              </a>
+                <div className="foot-contact-row">
+                  <span className="foot-icon foot-flag" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <circle cx="11" cy="12" r="7" fill="#006a4e" />
+                      <circle cx="13.8" cy="12" r="3.5" fill="#f42a41" />
+                    </svg>
+                  </span>
+                  <span>Dhaka,Bangladesh</span>
+                </div>
+                <div className="foot-contact-row">
+                  <span className="foot-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img" focusable="false">
+                      <path d="M20.5 14.9c-1.2 0-2.4-.2-3.5-.6-.3-.1-.6 0-.8.2l-1.6 1.6c-2.5-1.3-4.6-3.4-5.9-5.9l1.6-1.6c.2-.2.3-.5.2-.8-.4-1.1-.6-2.3-.6-3.5 0-.4-.3-.7-.7-.7H6.2c-.4 0-.7.3-.7.7 0 7.8 6.3 14.1 14.1 14.1.4 0 .7-.3.7-.7v-2.2c0-.4-.3-.7-.7-.7Z" fill="#25D366"/>
+                      <path d="M15.8 13.5a.8.8 0 0 1-.6-.2l-1.5-1.2a.8.8 0 0 1-.3-.8l.3-1.5a.8.8 0 0 0-.2-.7L11.8 7a.8.8 0 0 0-.7-.2L9.6 7.2a.8.8 0 0 1-.8-.2L7.6 5.9a.8.8 0 0 0-.7-.2H5.8a.8.8 0 0 0-.8.8c0 6 4.8 10.8 10.8 10.8a.8.8 0 0 0 .8-.8v-.8a.8.8 0 0 0-.8-.8Z" fill="#fff" opacity="0.18"/>
+                    </svg>
+                  </span>
+                  <span>01701826202</span>
+                </div>
+              </div>
             </div>
             <div className="foot-bottom">
-              <div>{get('footer_copyright', '©2024')}</div>
+              <div>{get('footer_copyright', '©2026')}</div>
               <div className="socials">
-                <a href={get('social_linkedin', '#')} target="_blank" rel="noopener">LINKEDIN</a>
-                <a href={get('social_github', '#')} target="_blank" rel="noopener">GITHUB</a>
+                <a href="https://www.linkedin.com/in/abdullah-al-ifaque-951065288/" target="_blank" rel="noopener">LINKEDIN</a>
+                <a href="https://github.com/abdullah-1056" target="_blank" rel="noopener">GITHUB</a>
               </div>
             </div>
           </div>
