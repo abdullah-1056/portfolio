@@ -194,7 +194,7 @@ section{
 }
 
 .statement{
-  padding:110px 0 80px;
+  padding:60px 0 80px;
   text-align:center;
 }
 .statement .divider{
@@ -207,7 +207,7 @@ section{
   width:80px;height:80px;
   border-radius:50%;
   border:1px solid rgba(255,255,255,0.2);
-  margin:0 auto 90px;
+  margin:0 auto 40px;
   display:flex;align-items:center;justify-content:center;
 }
 .statement .cursor-circle span{
@@ -611,6 +611,57 @@ section{
 }
 .credential-link:hover{
   opacity:0.7;
+}
+
+.ach-lists{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:60px;
+  margin-top:70px;
+  padding-top:60px;
+  border-top:1px solid var(--line);
+}
+
+.ach-list-title{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--accent-blue);
+  margin-bottom:28px;
+}
+
+.ach-list ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.ach-list ul li{
+  font-size:13px;
+  color:var(--text-dim);
+  padding-left:20px;
+  position:relative;
+  line-height:1.6;
+}
+
+.ach-list ul li::before{
+  content:'▸';
+  position:absolute;
+  left:0;
+  color:var(--accent-blue);
+  font-size:11px;
+  top:2px;
+}
+
+@media (max-width:900px){
+  .ach-lists{
+    grid-template-columns:1fr;
+    gap:40px;
+  }
 }
 
 #contact{

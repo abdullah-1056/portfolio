@@ -239,24 +239,30 @@ export default function Home() {
                 <span className="overview-card-cta">Open Certificates →</span>
               </a>
             </div>
-            <div className="achievements-grid">
-              {visibleAchievements.map((achievement, i) => (
-                <div key={achievement.id} className="achievement-card">
-                  <div className="achievement-number">{String(i + 1).padStart(2, '0')}</div>
-                  <h3>{achievement.title}</h3>
-                  <div className="achievement-meta">
-                    <span className="issuer">{achievement.issuer}</span>
-                    <span className="date">{achievement.date}</span>
-                  </div>
-                  <p>{achievement.description}</p>
-                  {achievement.credential_url && achievement.credential_url !== '#' && (
-                    <a href={achievement.credential_url} target="_blank" rel="noopener" className="credential-link">
-                      View Credential →
-                    </a>
-                  )}
-                </div>
-              ))}
+
+            <div className="ach-lists">
+              <div className="ach-list">
+                <div className="ach-list-title">1. ACHIEVEMENTS</div>
+                <ul>
+                  <li>Dean's List — Bangladesh University of Professionals, 2024</li>
+                  <li>1st Place — Inter-University Programming Contest, 2023</li>
+                  <li>Best Project Award — CSE Fest, BUP, 2023</li>
+                  <li>National Science Olympiad — Top 20 Finalist, 2022</li>
+                  <li>Hackathon Winner — TechFest BD, 2024</li>
+                </ul>
+              </div>
+              <div className="ach-list">
+                <div className="ach-list-title">2. CERTIFICATES</div>
+                <ul>
+                  <li>React Developer Certification — Meta, 2024</li>
+                  <li>Full Stack Web Development — freeCodeCamp, 2023</li>
+                  <li>UI/UX Design Fundamentals — Google, 2023</li>
+                  <li>JavaScript Algorithms & Data Structures — freeCodeCamp, 2023</li>
+                  <li>Responsive Web Design — freeCodeCamp, 2022</li>
+                </ul>
+              </div>
             </div>
+
           </div>
         </section>
 
