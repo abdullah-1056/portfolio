@@ -150,7 +150,7 @@ export default function Home() {
                 <div className="edu-card">
                   <div className="edu-card-top">
                     <div className="edu-degree-badge">B.Sc.</div>
-                    <div className="edu-year-badge">2022 — 2026</div>
+                    <div className="edu-year-badge">17,jul 2022 — 20,jul 2026</div>
                   </div>
 
                   <div className="edu-institution">
@@ -182,10 +182,29 @@ export default function Home() {
                     </div>
                     <div className="edu-meta-item">
                       <div className="edu-meta-label">STATUS</div>
-                      <div className="edu-meta-value edu-status-active">ONGOING</div>
+                      <div className="edu-meta-value edu-status-active">COMPLETED</div>
                     </div>
                   </div>
                 </div>
+
+                {/* Thesis Card */}
+                <a
+                  href="https://drive.google.com/drive/folders/17LBH5V-hV2_c_g6zSR-MrqHj85ao72_K?usp=sharing"
+                  target="_blank"
+                  rel="noopener"
+                  className="thesis-card"
+                >
+                  <div className="thesis-top">
+                    <div className="thesis-badge">THESIS</div>
+                    <svg className="thesis-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                  </div>
+                  <div className="thesis-title">University Thesis</div>
+                  <div className="thesis-desc">Full thesis document available on Google Drive. Click to view and download.</div>
+                  <div className="thesis-footer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 8H13V3.5zM12 17l-4-4h2.5v-3h3v3H16l-4 4z"/></svg>
+                    View on Google Drive →
+                  </div>
+                </a>
               </div>
             </div>
           </div>

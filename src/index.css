@@ -50,7 +50,7 @@ header{
 }
 
 .logo{
-  font-size:14px;
+  font-size:20px;
   letter-spacing:0.05em;
   font-weight:700;
   display:flex;
@@ -310,7 +310,7 @@ section{
   margin-bottom:32px;
 }
 .edu-degree-badge{
-  font-size:11px;
+  font-size:20px;
   font-weight:700;
   letter-spacing:0.1em;
   border:1px solid var(--accent-blue);
@@ -319,7 +319,7 @@ section{
   text-transform:uppercase;
 }
 .edu-year-badge{
-  font-size:11px;
+  font-size:20px;
   color:var(--text-faint);
   letter-spacing:0.06em;
 }
@@ -336,7 +336,7 @@ section{
   margin-bottom:6px;
 }
 .edu-inst-abbr{
-  font-size:11px;
+  font-size:20px;
   color:var(--text-faint);
   letter-spacing:0.1em;
 }
@@ -349,7 +349,7 @@ section{
 }
 
 .edu-program{
-  font-size:14px;
+  font-size:25px;
   color:var(--text-dim);
   text-transform:uppercase;
   letter-spacing:0.05em;
@@ -368,7 +368,7 @@ section{
   color:var(--text-primary);
 }
 .edu-cgpa-label{
-  font-size:12px;
+  font-size:20px;
   color:var(--text-faint);
   letter-spacing:0.08em;
   text-transform:uppercase;
@@ -380,20 +380,91 @@ section{
   gap:24px;
 }
 .edu-meta-label{
-  font-size:10px;
+  font-size:15px;
   color:var(--text-faint);
   letter-spacing:0.1em;
   text-transform:uppercase;
   margin-bottom:6px;
 }
 .edu-meta-value{
-  font-size:12px;
+  font-size:18px;
   color:var(--text-primary);
   font-weight:600;
   letter-spacing:0.03em;
 }
 .edu-status-active{
   color:var(--accent-blue);
+}
+
+/* Thesis Card */
+.thesis-card{
+  display:block;
+  margin-top:20px;
+  border:1px solid var(--line);
+  padding:32px 40px;
+  background:rgba(94,200,248,0.03);
+  text-decoration:none;
+  color:var(--text-primary);
+  transition:all 0.3s ease;
+  position:relative;
+  overflow:hidden;
+}
+.thesis-card::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:3px;
+  background:var(--accent-blue);
+}
+.thesis-card:hover{
+  border-color:var(--accent-blue);
+  background:rgba(94,200,248,0.06);
+}
+.thesis-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+.thesis-badge{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  color:var(--accent-blue);
+  border:1px solid var(--accent-blue);
+  padding:4px 12px;
+  text-transform:uppercase;
+}
+.thesis-arrow{
+  color:var(--text-faint);
+  transition:all 0.3s ease;
+}
+.thesis-card:hover .thesis-arrow{
+  color:var(--accent-blue);
+  transform:translate(3px,-3px);
+}
+.thesis-title{
+  font-size:18px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.02em;
+  margin-bottom:10px;
+}
+.thesis-desc{
+  font-size:13px;
+  color:var(--text-dim);
+  line-height:1.6;
+  margin-bottom:20px;
+}
+.thesis-footer{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:var(--accent-blue);
+  letter-spacing:0.04em;
 }
 
 @media (max-width:900px){
