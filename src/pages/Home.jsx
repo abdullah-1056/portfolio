@@ -23,7 +23,7 @@ export default function Home() {
     description: "Languages: C, C++, SQL, PHP, HTML5, CSS3. Database design and management with MySQL, including ER modelling, schema normalization, joins, constraints, indexing, and query optimization. Server-side scripting with front-end and back-end integration, form handling, and responsive layouts.",
     tags: ["C / C++", "SQL", "PHP", "HTML5 / CSS3", "MySQL"],
     icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop&q=80"
+    image_url: ""
   },
   {
     id: 2,
@@ -31,7 +31,7 @@ export default function Home() {
     description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
     tags: ["Linux CLI", "Wireshark ", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
     icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=400&fit=crop&q=80"
+    image_url: ""
   },
   {
     id: 3,
@@ -39,7 +39,7 @@ export default function Home() {
     description: "Version control and collaboration with Git and GitHub. Development environments including VS Code and Eclipse. Project management with Trello following Agile/Scrum methodology. Additional proficiency in AutoCAD and Docker for design and containerization workflows.",
     tags: ["Git / GitHub", "VS Code / Eclipse", "Agile / Scrum", "Docker", "AutoCAD"],
     icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=400&fit=crop&q=80"
+    image_url: ""
   }
 ];
   const [achievements, setAchievements] = useState([])
@@ -135,35 +135,63 @@ export default function Home() {
         <section id="process">
           <div className="wrap">
             <div className="section-label">03 — EDUCATION</div>
-            <div className="process-grid">
-              <div>
-                <div className="process-title">
-                  <h2 dangerouslySetInnerHTML={{__html: get('process_title', 'SILENT BY NATURE.<br>POWERFUL BY <span class="accent">DESIGN</span>.')}} />
-                </div>
+
+            <div className="edu-layout">
+              {/* Left: heading + globe */}
+              <div className="edu-left">
+                <h2 className="edu-heading">ACADEMIC<br/><span className="accent">BACKGROUND</span></h2>
                 <div className="globe-frame">
                   <Globe />
                 </div>
               </div>
-              <div className="process-steps">
-                {steps.map(s => (
-                  <div key={s.id} className="step">
-                    <div className="idx">{s.step_number}</div>
-                    <h4>{s.title}</h4>
-                    <p>{s.body}</p>
+
+              {/* Right: education card */}
+              <div className="edu-right">
+                <div className="edu-card">
+                  <div className="edu-card-top">
+                    <div className="edu-degree-badge">B.Sc.</div>
+                    <div className="edu-year-badge">2022 — 2026</div>
                   </div>
-                ))}
+
+                  <div className="edu-institution">
+                    <div className="edu-inst-name">Bangladesh University of Professionals</div>
+                    <div className="edu-inst-abbr">BUP</div>
+                  </div>
+
+                  <div className="edu-divider" />
+
+                  <div className="edu-program">
+                    Computer Science &amp; Engineering
+                  </div>
+
+                  <div className="edu-cgpa">
+                    <div className="edu-cgpa-value">3.39</div>
+                    <div className="edu-cgpa-label">CGPA / 4.00</div>
+                  </div>
+
+                  <div className="edu-divider" />
+
+                  <div className="edu-meta-row">
+                    <div className="edu-meta-item">
+                      <div className="edu-meta-label">DEGREE</div>
+                      <div className="edu-meta-value">Bachelor of Science</div>
+                    </div>
+                    <div className="edu-meta-item">
+                      <div className="edu-meta-label">DEPARTMENT</div>
+                      <div className="edu-meta-value">CSE</div>
+                    </div>
+                    <div className="edu-meta-item">
+                      <div className="edu-meta-label">STATUS</div>
+                      <div className="edu-meta-value edu-status-active">ONGOING</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="calm" style={{position:'relative'}}>
-          <div className="wrap">
-            <div className="eyebrow">{get('calm_eyebrow', 'A CALM AND DELIBERATE PRESENCE')}</div>
-            <div className="calm-heading">{get('calm_heading', 'IN A DIGITAL WORLD THAT NEVER STOPS MOVING, OFFERING QUIET DEDICATION WITHOUT ASKING FOR ATTENTION.')}</div>
-          </div>
-          <div className="calm-arrow">&#8599;</div>
-        </section>
+       
 
         <section id="skills-section">
           <div id="skillset-head" className="wrap">
