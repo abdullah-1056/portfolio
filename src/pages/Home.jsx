@@ -85,8 +85,12 @@ export default function Home() {
         <section id="home">
           <div className="wrap">
             <div className="home-left">
-              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR <br/> SILENCE <br/>SECURED.')}} />
+              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE.<br/>SECURED.')}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
+              <div className="btn-row">
+                <button className="btn primary">GET STARTED →</button>
+                <button className="btn">EXPLORE MORE →</button>
+              </div>
             </div>
           </div>
         </section>
@@ -103,7 +107,7 @@ export default function Home() {
               <div className="side-stats">
                 <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">University</div></div>
                 <div><div className="n">{get('stat_degree', 'CSE')}</div><div className="l">Student</div></div>
-                <div><div className="n">{get('stat_year', '2026')}</div><div className="l">Batch</div></div>
+                <div><div className="n">{get('stat_year', '2022')}</div><div className="l">Batch</div></div>
               </div>
             </div>
           </div>
@@ -244,21 +248,18 @@ export default function Home() {
               <div className="ach-list">
                 <div className="ach-list-title">1. ACHIEVEMENTS</div>
                 <ul>
-                  <li>Dean's List — Bangladesh University of Professionals, 2024</li>
+                  <li>Appointed as Operations Management Intern — Youth School for Social Entrepreneurs (YSSE), 2024</li>
                   <li>1st Place — Inter-University Programming Contest, 2023</li>
-                  <li>Best Project Award — CSE Fest, BUP, 2023</li>
-                  <li>National Science Olympiad — Top 20 Finalist, 2022</li>
-                  <li>Hackathon Winner — TechFest BD, 2024</li>
                 </ul>
               </div>
               <div className="ach-list">
                 <div className="ach-list-title">2. CERTIFICATES</div>
                 <ul>
-                  <li>React Developer Certification — Meta, 2024</li>
-                  <li>Full Stack Web Development — freeCodeCamp, 2023</li>
-                  <li>UI/UX Design Fundamentals — Google, 2023</li>
-                  <li>JavaScript Algorithms & Data Structures — freeCodeCamp, 2023</li>
-                  <li>Responsive Web Design — freeCodeCamp, 2022</li>
+                  <li>HackRank CSS Certification —  17,May 2025</li>
+                  <li>Basics_of_python — 17,May 2025</li>
+                  <li>Hck4G powered by CYLYNK —  2025</li>
+                  <li>UNIVERSITY CTF 2025 — HACKTHEBOX, 19/12/2025 - 21/12/2025</li>
+                  <li></li>
                 </ul>
               </div>
             </div>
@@ -412,7 +413,7 @@ export default function Home() {
               </div>
             </div>
             <div className="foot-bottom">
-              <div>{get('footer_copyright', '©2026')}</div>
+              <div>{get('footer_copyright', '©2022')}</div>
               <div className="socials">
                 <a href="https://www.linkedin.com/in/abdullah-al-ifaque-951065288/" target="_blank" rel="noopener">LINKEDIN</a>
                 <a href="https://github.com/abdullah-1056" target="_blank" rel="noopener">GITHUB</a>
