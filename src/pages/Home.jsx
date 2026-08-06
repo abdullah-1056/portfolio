@@ -75,8 +75,8 @@ export default function Home() {
   }, [])
 
   const get = (key, fallback = '') => content[key] || fallback
-  const achievementsDriveUrl = 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing'
-  const certificatesDriveUrl = 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing'
+  const achievementsDriveUrl = get('achievements_drive_url', 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing')
+  const certificatesDriveUrl = get('certificates_drive_url', 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing')
   const hiddenAchievements = [
     ['React Developer Certification', 'Meta'],
     ['Full Stack Web Development', 'freeCodeCamp'],
@@ -109,8 +109,8 @@ export default function Home() {
               <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE <br/>SECURED.')}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
               <div className="btn-row">
-                <button className="btn primary">GET STARTED →</button>
-                <button className="btn">EXPLORE MORE →</button>
+                <button className="btn primary">{get('hero_btn1', 'GET STARTED →')}</button>
+                <button className="btn">{get('hero_btn2', 'EXPLORE MORE →')}</button>
               </div>
             </div>
           </div>
@@ -153,24 +153,22 @@ export default function Home() {
               <div className="edu-right">
                 <div className="edu-card">
                   <div className="edu-card-top">
-                    <div className="edu-degree-badge">B.Sc.</div>
-                    <div className="edu-year-badge">17,jul 2022 — 20,jul 2026</div>
+                    <div className="edu-degree-badge">{get('edu_degree_badge', 'B.Sc.')}</div>
+                    <div className="edu-year-badge">{get('edu_year_range', '17 Jul 2022 — 20 Jul 2026')}</div>
                   </div>
 
                   <div className="edu-institution">
-                    <div className="edu-inst-name">Bangladesh University of Professionals</div>
-                    <div className="edu-inst-abbr">BUP</div>
+                    <div className="edu-inst-name">{get('edu_inst_name', 'Bangladesh University of Professionals')}</div>
+                    <div className="edu-inst-abbr">{get('edu_inst_abbr', 'BUP')}</div>
                   </div>
 
                   <div className="edu-divider" />
 
-                  <div className="edu-program">
-                    Computer Science &amp; Engineering
-                  </div>
+                  <div className="edu-program">{get('edu_program', 'Computer Science & Engineering')}</div>
 
                   <div className="edu-cgpa">
-                    <div className="edu-cgpa-value">3.39</div>
-                    <div className="edu-cgpa-label">CGPA / 4.00</div>
+                    <div className="edu-cgpa-value">{get('edu_cgpa', '3.39')}</div>
+                    <div className="edu-cgpa-label">CGPA / {get('edu_cgpa_max', '4.00')}</div>
                   </div>
 
                   <div className="edu-divider" />
@@ -182,18 +180,18 @@ export default function Home() {
                     </div>
                     <div className="edu-meta-item">
                       <div className="edu-meta-label">DEPARTMENT</div>
-                      <div className="edu-meta-value">CSE</div>
+                      <div className="edu-meta-value">{get('edu_inst_abbr', 'CSE')}</div>
                     </div>
                     <div className="edu-meta-item">
                       <div className="edu-meta-label">STATUS</div>
-                      <div className="edu-meta-value edu-status-active">COMPLETED</div>
+                      <div className="edu-meta-value edu-status-active">{get('edu_status', 'ONGOING')}</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Thesis Card */}
                 <a
-                  href="https://drive.google.com/drive/folders/17LBH5V-hV2_c_g6zSR-MrqHj85ao72_K?usp=sharing"
+                  href={get('thesis_url', 'https://drive.google.com/drive/folders/17LBH5V-hV2_c_g6zSR-MrqHj85ao72_K?usp=sharing')}
                   target="_blank"
                   rel="noopener"
                   className="thesis-card"
@@ -202,8 +200,8 @@ export default function Home() {
                     <div className="thesis-badge">THESIS</div>
                     <svg className="thesis-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                   </div>
-                  <div className="thesis-title">University Thesis</div>
-                  <div className="thesis-desc">Full thesis document available on Google Drive. Click to view and download.</div>
+                  <div className="thesis-title">{get('thesis_title', 'University Thesis')}</div>
+                  <div className="thesis-desc">{get('thesis_desc', 'Full thesis document available on Google Drive. Click to view and download.')}</div>
                   <div className="thesis-footer">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 1.5L18.5 8H13V3.5zM12 17l-4-4h2.5v-3h3v3H16l-4 4z"/></svg>
                     View on Google Drive →
@@ -236,14 +234,16 @@ export default function Home() {
                       ))}
                     </div>
                     {skill.writeup && (
-                      <a
-                        href={skill.writeup.url}
-                        target="_blank"
-                        rel="noopener"
-                        className="skill-writeup-link"
-                      >
+                      <a href={skill.writeup.url || skill.writeup_url} target="_blank" rel="noopener" className="skill-writeup-link">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        {skill.writeup.label}
+                        {skill.writeup.label || skill.writeup_label}
+                        <svg className="writeup-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                      </a>
+                    )}
+                    {!skill.writeup && skill.writeup_url && (
+                      <a href={skill.writeup_url} target="_blank" rel="noopener" className="skill-writeup-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        {skill.writeup_label || 'View Writeup'}
                         <svg className="writeup-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                       </a>
                     )}
@@ -320,18 +320,15 @@ export default function Home() {
               <div className="ach-list">
                 <div className="ach-list-title">1. ACHIEVEMENTS</div>
                 <ul>
-                  <li>Appointed as Operations Management Intern — Youth School for Social Entrepreneurs (YSSE), 2024</li>
-                  <li>1st Place — Inter-University Programming Contest, 2023</li>
+                  {(get('achievements_list', 'Appointed as Operations Management Intern — Youth School for Social Entrepreneurs (YSSE), 2024\n1st Place — Inter-University Programming Contest, 2023'))
+                    .split('\n').filter(l => l.trim()).map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
               <div className="ach-list">
                 <div className="ach-list-title">2. CERTIFICATES</div>
                 <ul>
-                  <li>HackRank CSS Certification —  17,May 2025</li>
-                  <li>Basics_of_python — 17,May 2025</li>
-                  <li>Hck4G powered by CYLYNK —  2025</li>
-                  <li>UNIVERSITY CTF 2025 — HACKTHEBOX, 19/12/2025 - 21/12/2025</li>
-                  <li></li>
+                  {(get('certificates_list', 'HackRank CSS Certification — 17 May 2025\nBasics of Python — 17 May 2025\nHck4G powered by CYLYNK — 2025\nUNIVERSITY CTF 2025 — HACKTHEBOX, Dec 2025'))
+                    .split('\n').filter(l => l.trim()).map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               </div>
             </div>
@@ -358,8 +355,8 @@ export default function Home() {
             <div className="cta-grid">
               <div className="cta-left">
                 <div className="contact-label">07 — CONTACT</div>
-                <h2>Have a project idea<br/>in mind? Let's get<br/>started</h2>
-                <p>We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.</p>
+                <h2 dangerouslySetInnerHTML={{__html: get('contact_headline', 'Have a project idea<br/>in mind? Let\'s get<br/>started')}} />
+                <p>{get('contact_subtext', "We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.")}</p>
               </div>
               <div className="contact-form-panel">
                 <form className="contact-form">
@@ -474,9 +471,9 @@ export default function Home() {
               </div>
               <div className="foot-contact">
                 <div className="foot-contact-label">GET IN TOUCH</div>
-              <a href="mailto:mdabdullah2002111@gmail.com" className="foot-email">
+              <a href={`mailto:${get('footer_email', 'mdabdullah2002111@gmail.com')}`} className="foot-email">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-                mdabdullah2002111@gmail.com
+                {get('footer_email', 'mdabdullah2002111@gmail.com')}
               </a>
                 <div className="foot-contact-row">
                   <span className="foot-icon foot-flag" aria-hidden="true">
@@ -485,24 +482,23 @@ export default function Home() {
                       <circle cx="13.8" cy="12" r="3.5" fill="#f42a41" />
                     </svg>
                   </span>
-                  <span>Dhaka,Bangladesh</span>
+                  <span>{get('footer_location', 'Dhaka, Bangladesh')}</span>
                 </div>
                 <div className="foot-contact-row">
                   <span className="foot-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="img" focusable="false">
                       <path d="M20.5 14.9c-1.2 0-2.4-.2-3.5-.6-.3-.1-.6 0-.8.2l-1.6 1.6c-2.5-1.3-4.6-3.4-5.9-5.9l1.6-1.6c.2-.2.3-.5.2-.8-.4-1.1-.6-2.3-.6-3.5 0-.4-.3-.7-.7-.7H6.2c-.4 0-.7.3-.7.7 0 7.8 6.3 14.1 14.1 14.1.4 0 .7-.3.7-.7v-2.2c0-.4-.3-.7-.7-.7Z" fill="#25D366"/>
-                      <path d="M15.8 13.5a.8.8 0 0 1-.6-.2l-1.5-1.2a.8.8 0 0 1-.3-.8l.3-1.5a.8.8 0 0 0-.2-.7L11.8 7a.8.8 0 0 0-.7-.2L9.6 7.2a.8.8 0 0 1-.8-.2L7.6 5.9a.8.8 0 0 0-.7-.2H5.8a.8.8 0 0 0-.8.8c0 6 4.8 10.8 10.8 10.8a.8.8 0 0 0 .8-.8v-.8a.8.8 0 0 0-.8-.8Z" fill="#fff" opacity="0.18"/>
                     </svg>
                   </span>
-                  <span>01701826202</span>
+                  <span>{get('footer_phone', '01701826202')}</span>
                 </div>
               </div>
             </div>
             <div className="foot-bottom">
               <div>{get('footer_copyright', '©2022')}</div>
               <div className="socials">
-                <a href="https://www.linkedin.com/in/abdullah-al-ifaque-951065288/" target="_blank" rel="noopener">LINKEDIN</a>
-                <a href="https://github.com/abdullah-1056" target="_blank" rel="noopener">GITHUB</a>
+                <a href={get('social_linkedin', 'https://www.linkedin.com/in/abdullah-al-ifaque-951065288/')} target="_blank" rel="noopener">LINKEDIN</a>
+                <a href={get('social_github', 'https://github.com/abdullah-1056')} target="_blank" rel="noopener">GITHUB</a>
               </div>
             </div>
           </div>
