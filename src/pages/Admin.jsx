@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Admin UI color constants — change these to update admin editing colors
+const ADMIN_BG = '#f9f9f6'
+const ADMIN_BG_ALT = '#26e815'
+const ADMIN_TEXT = '#000'
+
 // ─── Auth Shell ────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [session, setSession] = useState(null)
@@ -58,6 +63,7 @@ function AdminDashboard({ logout }) {
   const [projects, setProjects]         = useState([])
   const [msg, setMsg]                   = useState('')
   const [activeSection, setActiveSection] = useState('header')
+  const [achTab, setAchTab] = useState('achievements')
 
   useEffect(() => { load() }, [])
 
@@ -90,11 +96,90 @@ function AdminDashboard({ logout }) {
 
   // generic table row update
   const updateRow = (table, rows, setRows, id, field, raw) => {
-    const value = field === 'tags' ? raw.split(',').map(t => t.trim()).filter(Boolean) : raw
+    // For tags: convert to array only when the existing row stores tags as an array
+    let value = raw
+    if (field === 'tags') {
+      const existing = rows.find(r => r.id === id)
+      const existingIsArray = existing && Array.isArray(existing.tags)
+      if (existingIsArray) {
+        value = typeof raw === 'string' ? raw.split(',').map(t => t.trim()).filter(Boolean) : (Array.isArray(raw) ? raw : [])
+      } else {
+        // keep raw string (or whatever was passed) when DB expects a string
+        value = raw
+      }
+    }
     const updated = rows.map(r => r.id === id ? { ...r, [field]: value } : r)
     setRows(updated)
     const row = updated.find(r => r.id === id)
     supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+  }
+
+  // save a field value after editing (used for tags to avoid converting on every keystroke)
+  const saveField = (table, rows, setRows, id, field, raw) => {
+    let value = raw
+    if (field === 'tags') {
+      const existing = rows.find(r => r.id === id)
+      const existingIsArray = existing && Array.isArray(existing.tags)
+      if (existingIsArray) value = typeof raw === 'string' ? raw.split(',').map(t => t.trim()).filter(Boolean) : (Array.isArray(raw) ? raw : [])
+    }
+    const updated = rows.map(r => r.id === id ? { ...r, [field]: value, _tags_edit: undefined } : r)
+    setRows(updated)
+    const row = updated.find(r => r.id === id)
+    supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+  }
+
+  // save writeups (array of {label,url}). Persists to `writeups` column if existing row has it,
+  // otherwise falls back to storing the first writeup in `writeup_label`/`writeup_url`.
+  const saveWriteups = (table, rows, setRows, id, rawArray) => {
+    const existing = rows.find(r => r.id === id) || {}
+    const existingHasWriteups = Array.isArray(existing.writeups)
+    const valueForUpdate = {}
+    if (existingHasWriteups) {
+      valueForUpdate.writeups = rawArray
+    } else {
+      // fallback: set first item into legacy fields
+      const first = (rawArray && rawArray.length > 0) ? rawArray[0] : { label: '', url: '' }
+      valueForUpdate.writeup_label = first.label || ''
+      valueForUpdate.writeup_url = first.url || ''
+    }
+    // update local rows
+    const updated = rows.map(r => r.id === id ? { ...r, writeups: rawArray, _writeups_edit: undefined, writeup_label: valueForUpdate.writeup_label ?? r.writeup_label, writeup_url: valueForUpdate.writeup_url ?? r.writeup_url } : r)
+    setRows(updated)
+    const row = { ...updated.find(r => r.id === id), ...valueForUpdate }
+    supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+  }
+
+  // Small ListEditor component moved here so hooks are used at top-level of AdminDashboard
+  function ListEditor({ contentKey }) {
+    const raw = content[contentKey] || ''
+    const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
+    const [local, setLocal] = useState(items)
+    useEffect(() => setLocal(items), [raw])
+    return (
+      <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
+        <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+            {local.map((it, idx) => (
+              <div key={idx} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                <div style={{width:18,textAlign:'center',color:'var(--accent-blue)',fontWeight:700}}>•</div>
+                <input value={it} onChange={e => setLocal(l => l.map((x,i) => i===idx ? e.target.value : x))} style={{padding:'8px',minWidth:'320px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
+                <button onClick={() => {
+                  if (!window.confirm('Remove this bullet?')) return
+                  const next = local.filter((_,i) => i!==idx)
+                  setLocal(next)
+                  sc(contentKey, next.join('\n'))
+                }} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:'8px'}}>
+            <button onClick={() => setLocal(l => [...l, ''])} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Bullet</button>
+            <button onClick={() => sc(contentKey, local.join('\n'))} style={{padding:'8px 12px',background:'var(--accent-blue)',cursor:'pointer',color:ADMIN_TEXT,border:'none'}}>Save</button>
+          </div>
+          <div style={{fontSize:'11px',color:'var(--text-faint)'}}>Hint: press Save to persist bullets.</div>
+        </div>
+      </div>
+    )
   }
 
   // add new row
@@ -143,7 +228,7 @@ function AdminDashboard({ logout }) {
         ))}
         <div style={{marginTop:'auto',padding:'24px'}}>
           <button onClick={logout}
-            style={{width:'100%',padding:'10px',border:'1px solid var(--line)',background:'transparent',color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'11px',cursor:'pointer',letterSpacing:'0.04em'}}>
+            style={{width:'100%',padding:'10px',border:'none',background:'var(--accent-blue)',color:ADMIN_TEXT,fontFamily:'var(--mono)',fontSize:'11px',cursor:'pointer',letterSpacing:'0.04em'}}>
             LOGOUT
           </button>
         </div>
@@ -219,16 +304,45 @@ function AdminDashboard({ logout }) {
           <Section title="04 — Skills">
             <Field label="Section Heading" value={content.skills_heading || ''} onChange={v => sc('skills_heading', v)} hint="e.g. THREE-LAYER SKILL SET" />
             {skills.map((s, i) => (
-              <div key={s.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(255,255,255,0.01)'}}>
-                <Label>SKILL {i + 1}</Label>
+                <div key={s.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(12, 11, 11, 0.01)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+                    <Label>SKILL {i + 1}</Label>
+                    <DeleteButton onClick={() => deleteRow('skills', s.id, setSkills, skills)} />
+                  </div>
                 <Field label="Category Name" value={s.category || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'category', v)} />
                 <Field label="Description" value={s.description || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'description', v)} multiline />
-                <Field label="Tags (comma separated)" value={(s.tags || []).join(', ')} onChange={v => updateRow('skills', skills, setSkills, s.id, 'tags', v)} hint="e.g. React, TypeScript, CSS" />
+                <Field label="Tags (comma separated)"
+                  value={s._tags_edit !== undefined ? s._tags_edit : (Array.isArray(s.tags) ? s.tags.join(', ') : (s.tags || ''))}
+                  onChange={v => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _tags_edit: v } : r))}
+                  onBlur={v => saveField('skills', skills, setSkills, s.id, 'tags', v)}
+                  hint="e.g. React, TypeScript, CSS" />
                 <Field label="Image URL (shows in black box)" value={s.image_url || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'image_url', v)} hint="Paste any image URL or leave blank for SVG icon" />
                 <Field label="Icon SVG / HTML (fallback)" value={s.icon_svg || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'icon_svg', v)} multiline hint="Raw SVG or <i> tag — used when Image URL is empty" />
-                <Divider label="Writeup Link (optional)" />
-                <Field label="Writeup Label" value={s.writeup_label || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'writeup_label', v)} hint="e.g. OverTheWire — Natas Writeup" />
-                <Field label="Writeup URL" value={s.writeup_url || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'writeup_url', v)} hint="Google Drive or external link" />
+                <Divider label="Writeup Links (optional)" />
+                {(() => {
+                  const existing = s._writeups_edit !== undefined ? s._writeups_edit : (
+                    Array.isArray(s.writeups) ? s.writeups : (
+                      s.writeup ? [s.writeup] : (
+                        (s.writeup_label || s.writeup_url) ? [{ label: s.writeup_label || '', url: s.writeup_url || '' }] : []
+                      )
+                    )
+                  )
+                  return (
+                    <div style={{marginBottom:'12px'}}>
+                      {existing.map((w, wi) => (
+                        <div key={wi} style={{display:'grid',gridTemplateColumns:'1fr 360px 80px',gap:'8px',marginBottom:'8px'}}>
+                            <input placeholder="Label" value={w.label || ''} onChange={e => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).map((x,ii) => ii===wi ? { ...x, label: e.target.value } : x) } : r))} style={{padding:'8px',background:ADMIN_BG_ALT,color:ADMIN_TEXT,border:'1px solid rgba(88, 221, 39, 0.12)'}} />
+                            <input placeholder="URL" value={w.url || ''} onChange={e => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).map((x,ii) => ii===wi ? { ...x, url: e.target.value } : x) } : r))} style={{padding:'8px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(35, 245, 39, 0.12)'}} />
+                          <button onClick={() => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).filter((_,ii) => ii!==wi) } : r))} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+                        </div>
+                      ))}
+                      <div style={{display:'flex',gap:'8px'}}>
+                        <button onClick={() => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: [...(r._writeups_edit || existing), { label: '', url: '' }] } : r))} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Writeup</button>
+                        <button onClick={() => saveWriteups('skills', skills, setSkills, s.id, (s._writeups_edit !== undefined ? s._writeups_edit : existing))} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Save Writeups</button>
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             ))}
             <AddButton onClick={() => addRow('skills', { order: skills.length + 1, category: 'New Skill', description: '', tags: [], icon_svg: '', image_url: '' }, setSkills)}>
@@ -248,7 +362,10 @@ function AdminDashboard({ logout }) {
                 </div>
                 <Field label="Title" value={pr.title || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'title', v)} />
                 <Field label="Description" value={pr.description || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'description', v)} multiline />
-                <Field label="Tags (comma separated)" value={(pr.tags || []).join(', ')} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'tags', v)} />
+                <Field label="Tags (comma separated)"
+                  value={pr._tags_edit !== undefined ? pr._tags_edit : (Array.isArray(pr.tags) ? pr.tags.join(', ') : (pr.tags || ''))}
+                  onChange={v => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _tags_edit: v } : r))}
+                  onBlur={v => saveField('projects', projects, setProjects, pr.id, 'tags', v)} />
                 <Field label="Image URL (optional)" value={pr.image_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'image_url', v)} hint="Project screenshot or banner" />
                 <Row>
                   <Field label="Live Demo URL" value={pr.live_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'live_url', v)} />
@@ -264,22 +381,25 @@ function AdminDashboard({ logout }) {
 
         {/* ── ACHIEVEMENTS ── */}
         {activeSection === 'achievements' && (
-          <Section title="06 — Achievements & Certificates">
+          <Section title="06 — Achievements & Certificates" titleColor={'var(--accent-blue)'}>
             <Divider label="Drive Folder Links (overview cards)" />
             <Field label="Achievements Drive URL" value={content.achievements_drive_url || ''} onChange={v => sc('achievements_drive_url', v)} hint="Google Drive folder for achievements" />
             <Field label="Certificates Drive URL" value={content.certificates_drive_url || ''} onChange={v => sc('certificates_drive_url', v)} hint="Google Drive folder for certificates" />
 
-            <Divider label="Achievements Bullet List" />
-            <Field label="Achievements List (one per line)" value={content.achievements_list || ''} onChange={v => sc('achievements_list', v)} multiline
-              hint="Each line = one bullet point. e.g. 1st Place — Programming Contest, 2023" />
-
-            <Divider label="Certificates Bullet List" />
-            <Field label="Certificates List (one per line)" value={content.certificates_list || ''} onChange={v => sc('certificates_list', v)} multiline
-              hint="Each line = one bullet point. e.g. React Certification — Meta, 2024" />
+            <Divider label="Achievements / Certificates" />
+            <div>
+              <div style={{display:'flex',gap:'8px',marginBottom:'12px'}}>
+                <button onClick={() => setAchTab('achievements')}
+                  style={{padding:'8px 12px',background: achTab==='achievements' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='achievements' ? ADMIN_TEXT : 'var(--text-dim)'}}>Achievements</button>
+                <button onClick={() => setAchTab('certificates')}
+                  style={{padding:'8px 12px',background: achTab==='certificates' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='certificates' ? ADMIN_TEXT : 'var(--text-dim)'}}>Certificates</button>
+              </div>
+              {achTab === 'achievements' ? <ListEditor contentKey={'achievements_list'} /> : <ListEditor contentKey={'certificates_list'} />}
+            </div>
 
             <Divider label="Individual Achievement Cards (DB rows)" />
             {achievements.map((a, i) => (
-              <div key={a.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(255,255,255,0.01)'}}>
+              <div key={a.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(13, 196, 246, 0.01)'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
                   <Label>ACHIEVEMENT {i + 1}</Label>
                   <DeleteButton onClick={() => deleteRow('achievements', a.id, setAchievements, achievements)} />
@@ -340,10 +460,10 @@ function AdminDashboard({ logout }) {
 }
 
 // ─── UI Primitives ──────────────────────────────────────────────────────────────
-function Section({ title, children }) {
+function Section({ title, children, titleColor }) {
   return (
     <div>
-      <h2 style={{fontSize:'20px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:'8px'}}>{title}</h2>
+      <h2 style={{fontSize:'20px',fontWeight:'800',textTransform:'uppercase',letterSpacing:'0.04em',marginBottom:'8px',color: titleColor || 'var(--text-primary)'}}>{title}</h2>
       <div style={{height:'2px',background:'var(--accent-blue)',width:'40px',marginBottom:'40px'}} />
       {children}
     </div>
@@ -367,15 +487,15 @@ function Label({ children }) {
   return <div style={{fontSize:'10px',color:'var(--text-faint)',letterSpacing:'0.1em',marginBottom:'16px',fontWeight:'700'}}>{children}</div>
 }
 
-function Field({ label, value, onChange, hint, multiline }) {
-  const base = {width:'100%',padding:'10px 12px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontSize:'13px',fontFamily:'var(--mono)',boxSizing:'border-box',outline:'none',transition:'border-color 0.2s'}
+function Field({ label, value, onChange, onBlur, hint, multiline }) {
+  const base = {width:'100%',padding:'10px 12px',background:ADMIN_BG,border:'1px solid rgba(0,0,0,0.12)',color:ADMIN_TEXT,fontSize:'13px',fontFamily:'var(--mono)',boxSizing:'border-box',outline:'none',transition:'border-color 0.2s'}
   return (
     <div style={{marginBottom:'20px'}}>
       <label style={{display:'block',fontSize:'11px',marginBottom:'6px',color:'var(--text-dim)',letterSpacing:'0.04em'}}>{label}</label>
       {multiline
-        ? <textarea value={value || ''} onChange={e => onChange(e.target.value)}
+        ? <textarea value={value || ''} onChange={e => onChange(e.target.value)} onBlur={e => onBlur && onBlur(e.target.value)}
             style={{...base,minHeight:'90px',resize:'vertical'}} />
-        : <input value={value || ''} onChange={e => onChange(e.target.value)}
+        : <input value={value || ''} onChange={e => onChange(e.target.value)} onBlur={e => onBlur && onBlur(e.target.value)}
             style={base} />
       }
       {hint && <div style={{fontSize:'10px',color:'var(--text-faint)',marginTop:'5px'}}>{hint}</div>}
@@ -386,7 +506,7 @@ function Field({ label, value, onChange, hint, multiline }) {
 function AddButton({ onClick, children }) {
   return (
     <button onClick={onClick}
-      style={{padding:'12px 24px',border:'1px dashed rgba(94,200,248,0.4)',background:'transparent',color:'var(--accent-blue)',fontFamily:'var(--mono)',fontSize:'12px',letterSpacing:'0.06em',cursor:'pointer',transition:'all 0.2s',width:'100%',marginTop:'8px'}}>
+      style={{padding:'12px 24px',border:'none',background:'var(--accent-blue)',color:ADMIN_TEXT,fontFamily:'var(--mono)',fontSize:'12px',letterSpacing:'0.06em',cursor:'pointer',transition:'all 0.2s',width:'100%',marginTop:'8px'}}>
       {children}
     </button>
   )
@@ -395,7 +515,7 @@ function AddButton({ onClick, children }) {
 function DeleteButton({ onClick }) {
   return (
     <button onClick={() => { if (window.confirm('Delete this item?')) onClick() }}
-      style={{padding:'6px 14px',border:'1px solid rgba(255,80,80,0.3)',background:'transparent',color:'rgba(255,80,80,0.7)',fontFamily:'var(--mono)',fontSize:'10px',letterSpacing:'0.06em',cursor:'pointer'}}>
+      style={{padding:'6px 14px',border:'none',background:'var(--accent-blue)',color:ADMIN_TEXT,fontFamily:'var(--mono)',fontSize:'10px',letterSpacing:'0.06em',cursor:'pointer'}}>
       DELETE
     </button>
   )

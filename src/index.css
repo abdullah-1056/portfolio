@@ -596,7 +596,7 @@ section{
   gap:8px;
   margin-top:24px;
   padding:12px 20px;
-  border:1px solid rgba(94,200,248,0.3);
+  border:1px solid rgba(161, 202, 221, 0.3);
   color:var(--accent-blue);
   font-size:12px;
   letter-spacing:0.05em;
@@ -609,7 +609,7 @@ section{
 }
 .skill-writeup-link:hover{
   border-color:var(--accent-blue);
-  background:rgba(94,200,248,0.1);
+  background:rgba(247, 249, 250, 0.1);
 }
 .skill-writeup-link svg:first-child{
   opacity:0.7;
@@ -633,7 +633,7 @@ section{
 .icon-box{
   width:200px;
   height:200px;
-  background:#050505;
+  background:#0e0e0e;
   border:1px solid var(--line);
   display:flex;
   align-items:center;
@@ -678,12 +678,12 @@ section{
 .project-card{
   border:1px solid var(--line);
   padding:40px;
-  background:rgba(255,255,255,0.02);
+  background:rgba(83, 208, 227, 0.02);
   transition:all 0.3s ease;
 }
 .project-card:hover{
   border-color:var(--accent-orange);
-  background:rgba(232,168,107,0.05);
+  background:rgba(92, 155, 233, 0.05);
 }
 .project-number{
   font-size:11px;

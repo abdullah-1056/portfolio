@@ -16,36 +16,34 @@ export default function Home() {
     { id: 3, step_number: '03', title: 'DEVELOP & ITERATE', body: 'Code is written with precision using modern tools and frameworks. Continuous iteration ensures quality at every stage.' },
     { id: 4, step_number: '04', title: 'DELIVER & REFINE', body: 'The final product is polished and delivered with care. Feedback is welcomed to continuously improve and refine the work.' }
   ])
-  const skills = [
-  {
-    id: 1,
-    category: "Programming & Web Development",
-    description: "Languages: C, C++, SQL, PHP, HTML5, CSS3. Database design and management with MySQL, including ER modelling, schema normalization, joins, constraints, indexing, and query optimization. Server-side scripting with front-end and back-end integration, form handling, and responsive layouts.",
-    tags: ["C / C++", "SQL", "PHP", "HTML5 / CSS3", "MySQL"],
-    icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: ""
-  },
-  {
-    id: 2,
-    category: "Security & Networking",
-    description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
-    tags: ["Linux CLI", "Wireshark ", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
-    icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: "",
-    writeup: {
-      label: "OverTheWire — Natas Writeup",
-      url: "https://drive.google.com/drive/folders/1hB0qNbx0AKG3nutLKbeQI2m7ZUMp1kTa?usp=sharing"
+  const [skills, setSkills] = useState([
+    {
+      id: 1,
+      category: "Programming & Web Development",
+      description: "Languages: C, C++, SQL, PHP, HTML5, CSS3. Database design and management with MySQL, including ER modelling, schema normalization, joins, constraints, indexing, and query optimization. Server-side scripting with front-end and back-end integration, form handling, and responsive layouts.",
+      tags: ["C / C++", "SQL", "PHP", "HTML5 / CSS3", "MySQL"],
+      icon_svg: `<i class="ti ti-code" style="font-size:48px;color:var(--accent-blue)"></i>`,
+      image_url: "", writeup_label: "", writeup_url: ""
+    },
+    {
+      id: 2,
+      category: "Security & Networking",
+      description: "Linux command line proficiency across filesystem management, processes, permissions, and shell scripting. Web exploitation fundamentals, reconnaissance and enumeration, CTF methodology, and Burp Suite. Networking foundations in TCP/IP, Cisco Packet Tracer, and IoT platforms including Arduino, ESP32, Blynk, and sensor/actuator interfacing.",
+      tags: ["Linux CLI", "Wireshark", "Burp Suite", "TCP/IP", "Arduino / ESP32"],
+      icon_svg: `<i class="ti ti-shield-lock" style="font-size:48px;color:var(--accent-blue)"></i>`,
+      image_url: "",
+      writeup_label: "OverTheWire — Natas Writeup",
+      writeup_url: "https://drive.google.com/drive/folders/1hB0qNbx0AKG3nutLKbeQI2m7ZUMp1kTa?usp=sharing"
+    },
+    {
+      id: 3,
+      category: "Tools & Practice",
+      description: "Version control and collaboration with Git and GitHub. Development environments including VS Code and Eclipse. Project management with Trello following Agile/Scrum methodology. Additional proficiency in AutoCAD and Docker for design and containerization workflows.",
+      tags: ["Git / GitHub", "VS Code / Eclipse", "Agile / Scrum", "Docker", "AutoCAD"],
+      icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`,
+      image_url: "", writeup_label: "", writeup_url: ""
     }
-  },
-  {
-    id: 3,
-    category: "Tools & Practice",
-    description: "Version control and collaboration with Git and GitHub. Development environments including VS Code and Eclipse. Project management with Trello following Agile/Scrum methodology. Additional proficiency in AutoCAD and Docker for design and containerization workflows.",
-    tags: ["Git / GitHub", "VS Code / Eclipse", "Agile / Scrum", "Docker", "AutoCAD"],
-    icon_svg: `<i class="ti ti-tools" style="font-size:48px;color:var(--accent-blue)"></i>`,
-    image_url: ""
-  }
-];
+  ])
   const [achievements, setAchievements] = useState([])
   const [projects, setProjects] = useState([
     { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
@@ -75,6 +73,11 @@ export default function Home() {
   }, [])
 
   const get = (key, fallback = '') => content[key] || fallback
+  const parseTags = (tags) => {
+    if (Array.isArray(tags)) return tags
+    if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean)
+    return []
+  }
   const achievementsDriveUrl = get('achievements_drive_url', 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing')
   const certificatesDriveUrl = get('certificates_drive_url', 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing')
   const hiddenAchievements = [
@@ -229,21 +232,14 @@ export default function Home() {
                     <div className="skill-cat">{skill.category}</div>
                     <p>{skill.description}</p>
                     <div className="tag-row">
-                      {(skill.tags || []).map((tag, idx) => (
+                      {parseTags(skill.tags).map((tag, idx) => (
                         <div key={idx} className="tag">{tag}</div>
                       ))}
                     </div>
-                    {skill.writeup && (
-                      <a href={skill.writeup.url || skill.writeup_url} target="_blank" rel="noopener" className="skill-writeup-link">
+                    {(skill.writeup_url || (skill.writeup && skill.writeup.url)) && (
+                      <a href={skill.writeup_url || skill.writeup.url} target="_blank" rel="noopener" className="skill-writeup-link">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        {skill.writeup.label || skill.writeup_label}
-                        <svg className="writeup-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-                      </a>
-                    )}
-                    {!skill.writeup && skill.writeup_url && (
-                      <a href={skill.writeup_url} target="_blank" rel="noopener" className="skill-writeup-link">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        {skill.writeup_label || 'View Writeup'}
+                        {skill.writeup_label || (skill.writeup && skill.writeup.label) || 'View Writeup'}
                         <svg className="writeup-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                       </a>
                     )}
@@ -275,7 +271,7 @@ export default function Home() {
                   <h3>{project.title}</h3>
                   <p>{project.description}</p>
                   <div className="project-tags">
-                    {(project.tags || []).map((tag, idx) => (
+                    {parseTags(project.tags).map((tag, idx) => (
                       <span key={idx} className="project-tag">{tag}</span>
                     ))}
                   </div>
