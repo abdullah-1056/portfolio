@@ -190,6 +190,34 @@ function AdminDashboard({ logout }) {
     load()
   }
 
+  // Upload a file to Supabase Storage and return public URL
+  const uploadFileToStorage = async (bucket, path, file) => {
+    if (!file) return null
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: true })
+    if (error) { toast(error); return null }
+    // get public URL
+    const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path)
+    return publicData?.publicUrl || null
+  }
+
+  // handlers for project image file selection and upload
+  const handleProjectFileSelect = (projectId, file) => {
+    setProjects(rows => rows.map(r => r.id === projectId ? { ...r, _file: file } : r))
+  }
+
+  const uploadProjectImage = async (project) => {
+    const file = project._file
+    if (!file) return toast(new Error('No file selected'))
+    const path = `projects/${project.id}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi,'')}`
+    const publicUrl = await uploadFileToStorage('project-images', path, file)
+    if (publicUrl) {
+      // update local row and DB
+      updateRow('projects', projects, setProjects, project.id, 'image_url', publicUrl)
+      // clear _file
+      setProjects(rows => rows.map(r => r.id === project.id ? { ...r, _file: undefined } : r))
+    }
+  }
+
   // delete row
   const deleteRow = async (table, id, setRows, rows) => {
     const { error } = await supabase.from(table).delete().eq('id', id)
@@ -367,6 +395,11 @@ function AdminDashboard({ logout }) {
                   onChange={v => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _tags_edit: v } : r))}
                   onBlur={v => saveField('projects', projects, setProjects, pr.id, 'tags', v)} />
                 <Field label="Image URL (optional)" value={pr.image_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'image_url', v)} hint="Project screenshot or banner" />
+                <div style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'12px'}}>
+                  <input type="file" accept="image/*" onChange={e => handleProjectFileSelect(pr.id, e.target.files[0])} />
+                  <button onClick={() => uploadProjectImage(pr)} style={{padding:'8px 12px',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',cursor:'pointer'}}>Upload Image</button>
+                  <div style={{fontSize:'12px',color:'var(--text-faint)'}}>{pr._file ? pr._file.name : ''}</div>
+                </div>
                 <Row>
                   <Field label="Live Demo URL" value={pr.live_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'live_url', v)} />
                   <Field label="GitHub / Repo URL" value={pr.repo_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'repo_url', v)} />
