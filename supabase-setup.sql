@@ -40,9 +40,11 @@ CREATE TABLE IF NOT EXISTS projects (
   title TEXT,
   description TEXT,
   image_url TEXT,
+  images TEXT[],
   tags TEXT[],
   live_url TEXT,
-  repo_url TEXT
+  repo_url TEXT,
+  links JSONB
 );
 
 -- Education
@@ -79,27 +81,78 @@ ALTER TABLE education ENABLE ROW LEVEL SECURITY;
 -- Row Level Security (RLS) for achievements
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 
+-- Supabase Storage bucket for project images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('project-images', 'project-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Note: Storage policies must be managed via Supabase Dashboard > Storage > Policies
+-- Go to Storage > project-images bucket > Policies to set up access rules
+
 -- Public read access
+DROP POLICY IF EXISTS "Public read site_content" ON site_content;
 CREATE POLICY "Public read site_content" ON site_content FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read triplet_items" ON triplet_items;
 CREATE POLICY "Public read triplet_items" ON triplet_items FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read process_steps" ON process_steps;
 CREATE POLICY "Public read process_steps" ON process_steps FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read skills" ON skills;
 CREATE POLICY "Public read skills" ON skills FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read projects" ON projects;
 CREATE POLICY "Public read projects" ON projects FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read education" ON education;
 CREATE POLICY "Public read education" ON education FOR SELECT USING (true);
 
 -- Public read access for achievements
+DROP POLICY IF EXISTS "Public read achievements" ON achievements;
 CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true);
 
+-- Note: Storage bucket policies (for project-images) are managed via Dashboard
+-- See instructions below after running this SQL
+
 -- Authenticated write access
-CREATE POLICY "Authenticated write site_content" ON site_content FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write triplet_items" ON triplet_items FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write process_steps" ON process_steps FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write skills" ON skills FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write projects" ON projects FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated write education" ON education FOR ALL USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write site_content" ON site_content;
+CREATE POLICY "Authenticated write site_content" ON site_content
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write triplet_items" ON triplet_items;
+CREATE POLICY "Authenticated write triplet_items" ON triplet_items
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write process_steps" ON process_steps;
+CREATE POLICY "Authenticated write process_steps" ON process_steps
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write skills" ON skills;
+CREATE POLICY "Authenticated write skills" ON skills
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write projects" ON projects;
+CREATE POLICY "Authenticated write projects" ON projects
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write education" ON education;
+CREATE POLICY "Authenticated write education" ON education
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 -- Authenticated write access for achievements
-CREATE POLICY "Authenticated write achievements" ON achievements FOR ALL USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Authenticated write achievements" ON achievements;
+CREATE POLICY "Authenticated write achievements" ON achievements
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+-- ════════════════════════════════════════════════════════════════════════════════
+-- STORAGE BUCKET POLICIES - MUST BE SET VIA DASHBOARD UI
+-- ════════════════════════════════════════════════════════════════════════════════
+-- After running this SQL, go to: Storage > project-images > Policies
+-- And create these policies manually:
+--
+-- 1. SELECT (read): Allow public access
+--    Policy name: "Public read project images"
+--    Policy: No additional rules (allow all)
+--
+-- 2. INSERT (upload): Allow anonymous for dev
+--    Policy name: "Anonymous upload project images"  
+--    Policy: No additional rules (allow all)
+--
+-- 3. DELETE: Allow anonymous for dev
+--    Policy name: "Anonymous delete project images"
+--    Policy: No additional rules (allow all)
+-- ════════════════════════════════════════════════════════════════════════════════
 
 -- Seed data
 INSERT INTO site_content (key, value) VALUES

@@ -51,6 +51,8 @@ export default function Home() {
     { id: 3, title: 'Portfolio CMS', description: 'Self-editable portfolio website with admin panel for content management without touching code.', tags: ['React', 'Supabase', 'Vite'], live_url: '#', repo_url: '#' }
   ])
   const [showModal, setShowModal] = useState(false)
+  const [showGallery, setShowGallery] = useState(false)
+  const [currentProject, setCurrentProject] = useState(null)
 
   useEffect(() => {
     Promise.all([
@@ -267,6 +269,11 @@ export default function Home() {
             <div className="projects-grid">
               {projects.map((project, i) => (
                 <div key={project.id} className="project-card">
+                  {project.image_url && (
+                    <div className="project-media">
+                      <img src={project.image_url} alt={project.title} style={{width:'100%',height:'160px',objectFit:'cover',display:'block',marginBottom:'12px'}} />
+                    </div>
+                  )}
                   <div className="project-number">{String(i + 1).padStart(2, '0')}</div>
                   <h3>{project.title}</h3>
                   <p>{project.description}</p>
@@ -274,14 +281,33 @@ export default function Home() {
                     {parseTags(project.tags).map((tag, idx) => (
                       <span key={idx} className="project-tag">{tag}</span>
                     ))}
+                    {Array.isArray(project.images) && project.images.length > 0 && (
+                      <button 
+                        className="project-tag project-tag-images" 
+                        onClick={() => { setCurrentProject(project); setShowGallery(true); }}
+                        style={{cursor:'pointer',background:'var(--accent-blue)',color:'#000',border:'none',fontFamily:'inherit'}}
+                      >
+                        📸 Images ({project.images.length})
+                      </button>
+                    )}
                   </div>
                   <div className="project-links">
+                    {/* Live Demo (always shown first if exists) */}
                     {project.live_url && project.live_url !== '#' && (
                       <a href={project.live_url} target="_blank" rel="noopener" className="project-link">
                         Live Demo →
                       </a>
                     )}
-                    {project.repo_url && project.repo_url !== '#' && (
+                    {/* Custom links (GitHub, YouTube, etc.) */}
+                    {Array.isArray(project.links) && project.links.length > 0 && project.links.map((link, idx) => (
+                      link.url && link.url !== '#' && (
+                        <a key={idx} href={link.url} target="_blank" rel="noopener" className="project-link">
+                          {link.label || 'Link'} →
+                        </a>
+                      )
+                    ))}
+                    {/* Legacy repo URL fallback */}
+                    {(!Array.isArray(project.links) || project.links.length === 0) && project.repo_url && project.repo_url !== '#' && (
                       <a href={project.repo_url} target="_blank" rel="noopener" className="project-link">
                         GitHub →
                       </a>
@@ -449,6 +475,27 @@ export default function Home() {
                 
                 <button type="submit" className="modal-submit">Submit</button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showGallery && currentProject && (
+          <div className="modal-overlay" onClick={() => setShowGallery(false)} style={{zIndex:1001}}>
+            <div className="modal-content gallery-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth:'900px',maxHeight:'90vh',overflowY:'auto'}}>
+              <button className="modal-close" onClick={() => setShowGallery(false)}>✕</button>
+              <h3>{currentProject.title}</h3>
+              <p className="modal-subtitle">Project Gallery ({currentProject.images.length} images)</p>
+              
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))',gap:'16px',marginTop:'24px'}}>
+                {currentProject.images.map((imgUrl, idx) => (
+                  <div key={idx} style={{border:'1px solid var(--line)',padding:'8px',background:'rgba(0,0,0,0.05)',borderRadius:'4px'}}>
+                    <a href={imgUrl} target="_blank" rel="noopener">
+                      <img src={imgUrl} alt={`${currentProject.title} - Image ${idx+1}`} style={{width:'100%',height:'200px',objectFit:'cover',display:'block',borderRadius:'2px'}} />
+                    </a>
+                    <div style={{marginTop:'8px',fontSize:'11px',color:'var(--text-faint)',textAlign:'center'}}>Image {idx+1}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

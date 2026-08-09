@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 const ADMIN_BG = '#f9f9f6'
 const ADMIN_BG_ALT = '#26e815'
 const ADMIN_TEXT = '#000'
+// Supabase storage bucket (set VITE_SUPABASE_BUCKET in env or dashboard)
+const SUPABASE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET || 'project-images'
 
 // ─── Auth Shell ────────────────────────────────────────────────────────────────
 export default function Admin() {
@@ -30,8 +32,8 @@ export default function Admin() {
   }
 
   if (!session) {
-    // DEV BYPASS — remove before deploying to production
-    if (import.meta.env.DEV) return <AdminDashboard logout={() => {}} />
+    // Require sign-in to avoid anonymous requests being blocked by RLS.
+    // (Previously there was a DEV bypass here; it was removed to prevent RLS errors.)
     return (
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
         <form onSubmit={login} style={{width:'340px',border:'1px solid var(--line)',padding:'48px',background:'var(--bg-alt)'}}>
@@ -149,6 +151,13 @@ function AdminDashboard({ logout }) {
     supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
   }
 
+  // save custom links for projects (array of {label,url})
+  const saveProjectLinks = (id, rawArray) => {
+    const updated = projects.map(r => r.id === id ? { ...r, links: rawArray, _links_edit: undefined } : r)
+    setProjects(updated)
+    supabase.from('projects').update({ links: rawArray }).eq('id', id).then(({ error }) => toast(error))
+  }
+
   // Small ListEditor component moved here so hooks are used at top-level of AdminDashboard
   function ListEditor({ contentKey }) {
     const raw = content[contentKey] || ''
@@ -184,7 +193,11 @@ function AdminDashboard({ logout }) {
 
   // add new row
   const addRow = async (table, defaults, setRows) => {
-    const { data, error } = await supabase.from(table).insert(defaults).select()
+    // attach owner_id from current session when available to satisfy RLS owner policies
+    const { data: sessionData } = await supabase.auth.getSession()
+    const uid = sessionData?.session?.user?.id
+    const payload = uid ? { ...defaults, owner_id: uid } : defaults
+    const { data, error } = await supabase.from(table).insert(payload).select()
     if (error) return toast(error)
     toast(null)
     load()
@@ -194,10 +207,38 @@ function AdminDashboard({ logout }) {
   const uploadFileToStorage = async (bucket, path, file) => {
     if (!file) return null
     const { data, error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: true })
-    if (error) { toast(error); return null }
+    if (error) {
+      // Provide clearer guidance when bucket is missing
+      if (error.message && error.message.toLowerCase().includes('bucket not found')) {
+        toast(new Error(`Bucket "${bucket}" not found. Create a storage bucket named '${bucket}' in your Supabase project (Storage → Buckets) and make it public or adjust permissions.`))
+      } else {
+        toast(error)
+      }
+      return null
+    }
     // get public URL
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path)
     return publicData?.publicUrl || null
+  }
+
+  // Extract storage path from Supabase public URL
+  const getStoragePathFromUrl = (url) => {
+    if (!url) return null
+    try {
+      // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+      const match = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
+      return match ? match[1] : null
+    } catch (e) {
+      return null
+    }
+  }
+
+  // Delete file from Supabase Storage
+  const deleteFileFromStorage = async (bucket, url) => {
+    const path = getStoragePathFromUrl(url)
+    if (!path) return
+    const { error } = await supabase.storage.from(bucket).remove([path])
+    if (error) console.error('Failed to delete file from storage:', error)
   }
 
   // handlers for project image file selection and upload
@@ -205,17 +246,82 @@ function AdminDashboard({ logout }) {
     setProjects(rows => rows.map(r => r.id === projectId ? { ...r, _file: file } : r))
   }
 
+  const handleProjectMultipleFilesSelect = (projectId, files) => {
+    setProjects(rows => rows.map(r => r.id === projectId ? { ...r, _files: Array.from(files) } : r))
+  }
+
   const uploadProjectImage = async (project) => {
     const file = project._file
     if (!file) return toast(new Error('No file selected'))
     const path = `projects/${project.id}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi,'')}`
-    const publicUrl = await uploadFileToStorage('project-images', path, file)
+    const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
     if (publicUrl) {
-      // update local row and DB
-      updateRow('projects', projects, setProjects, project.id, 'image_url', publicUrl)
-      // clear _file
-      setProjects(rows => rows.map(r => r.id === project.id ? { ...r, _file: undefined } : r))
+      // update DB with the new image_url (exclude _file from update)
+      const { _file, ...cleanRow } = project
+      await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
+      // update local state
+      setProjects(rows => rows.map(r => r.id === project.id ? { ...r, image_url: publicUrl, _file: undefined } : r))
+      toast(null)
     }
+  }
+
+  const uploadProjectImages = async (project) => {
+    const files = project._files
+    if (!files || files.length === 0) return toast(new Error('No files selected'))
+    
+    setMsg(`Uploading ${files.length} images...`)
+    const uploadedUrls = []
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      setMsg(`Uploading image ${i + 1} of ${files.length}...`)
+      const path = `projects/${project.id}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi,'')}`
+      const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+      if (publicUrl) uploadedUrls.push(publicUrl)
+      // small delay to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    
+    if (uploadedUrls.length > 0) {
+      // append to existing images array
+      const existingImages = Array.isArray(project.images) ? project.images : []
+      const newImages = [...existingImages, ...uploadedUrls]
+      await supabase.from('projects').update({ images: newImages }).eq('id', project.id)
+      setProjects(rows => rows.map(r => r.id === project.id ? { ...r, images: newImages, _files: undefined } : r))
+      setMsg(`✓ Uploaded ${uploadedUrls.length} images successfully`)
+      setTimeout(() => setMsg(''), 3000)
+    } else {
+      toast(new Error('No images were uploaded'))
+    }
+  }
+
+  const removeProjectImage = async (projectId, imageUrl) => {
+    if (!window.confirm('Delete this image from storage?')) return
+    const project = projects.find(p => p.id === projectId)
+    if (!project) return
+    
+    // Delete from Storage
+    await deleteFileFromStorage(SUPABASE_BUCKET, imageUrl)
+    
+    // Remove from DB
+    const newImages = (project.images || []).filter(img => img !== imageUrl)
+    await supabase.from('projects').update({ images: newImages }).eq('id', projectId)
+    setProjects(rows => rows.map(r => r.id === projectId ? { ...r, images: newImages } : r))
+    toast(null)
+  }
+
+  const removeSingleProjectImage = async (projectId) => {
+    if (!window.confirm('Delete featured image from storage and database?')) return
+    const project = projects.find(p => p.id === projectId)
+    if (!project || !project.image_url) return
+    
+    // Delete from Storage
+    await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
+    
+    // Remove from DB
+    await supabase.from('projects').update({ image_url: null }).eq('id', projectId)
+    setProjects(rows => rows.map(r => r.id === projectId ? { ...r, image_url: null } : r))
+    toast(null)
   }
 
   // delete row
@@ -394,16 +500,81 @@ function AdminDashboard({ logout }) {
                   value={pr._tags_edit !== undefined ? pr._tags_edit : (Array.isArray(pr.tags) ? pr.tags.join(', ') : (pr.tags || ''))}
                   onChange={v => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _tags_edit: v } : r))}
                   onBlur={v => saveField('projects', projects, setProjects, pr.id, 'tags', v)} />
-                <Field label="Image URL (optional)" value={pr.image_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'image_url', v)} hint="Project screenshot or banner" />
+                
+                <Divider label="Project Logo/Thumbnail (shows on home page)" />
+                <Field label="Image URL (optional)" value={pr.image_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'image_url', v)} hint="Main project image shown on homepage" />
+                
+                {pr.image_url && (
+                  <div style={{marginBottom:'12px',border:'1px solid var(--line)',padding:'8px',background:'rgba(0,0,0,0.02)',display:'inline-block'}}>
+                    <div style={{position:'relative',display:'inline-block'}}>
+                      <img src={pr.image_url} alt="Featured" style={{width:'200px',height:'120px',objectFit:'cover',display:'block'}} />
+                      <button onClick={() => removeSingleProjectImage(pr.id)} 
+                        style={{position:'absolute',top:'8px',right:'8px',padding:'4px 8px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'10px',fontWeight:'700'}}>
+                        DELETE
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
                 <div style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'12px'}}>
                   <input type="file" accept="image/*" onChange={e => handleProjectFileSelect(pr.id, e.target.files[0])} />
-                  <button onClick={() => uploadProjectImage(pr)} style={{padding:'8px 12px',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',cursor:'pointer'}}>Upload Image</button>
+                  <button onClick={() => uploadProjectImage(pr)} style={{padding:'8px 12px',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',cursor:'pointer'}}>Upload Single Image</button>
                   <div style={{fontSize:'12px',color:'var(--text-faint)'}}>{pr._file ? pr._file.name : ''}</div>
                 </div>
+
+                <Divider label="Project Gallery (click 'Images' tag on homepage to view)" />
+                <div style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'12px'}}>
+                  <input type="file" accept="image/*" multiple onChange={e => handleProjectMultipleFilesSelect(pr.id, e.target.files)} />
+                  <button onClick={() => uploadProjectImages(pr)} style={{padding:'8px 12px',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',cursor:'pointer'}}>Upload Multiple Images</button>
+                  <div style={{fontSize:'12px',color:'var(--text-faint)'}}>{pr._files ? `${pr._files.length} file(s) selected` : ''}</div>
+                </div>
+                {Array.isArray(pr.images) && pr.images.length > 0 && (
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(120px, 1fr))',gap:'12px',marginBottom:'12px'}}>
+                    {pr.images.map((imgUrl, idx) => (
+                      <div key={idx} style={{position:'relative',border:'1px solid var(--line)',padding:'4px',background:'rgba(0,0,0,0.05)'}}>
+                        <img src={imgUrl} alt={`Project ${i+1} - ${idx+1}`} style={{width:'100%',height:'100px',objectFit:'cover',display:'block'}} />
+                        <button onClick={() => removeProjectImage(pr.id, imgUrl)} 
+                          style={{position:'absolute',top:'8px',right:'8px',padding:'4px 8px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'10px'}}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <Row>
-                  <Field label="Live Demo URL" value={pr.live_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'live_url', v)} />
-                  <Field label="GitHub / Repo URL" value={pr.repo_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'repo_url', v)} />
+                  <Field label="Live Demo URL" value={pr.live_url || ''} onChange={v => updateRow('projects', projects, setProjects, pr.id, 'live_url', v)} hint="Live project/demo URL" />
                 </Row>
+
+                <Divider label="Custom Links (GitHub, YouTube, Documentation, etc.)" />
+                {(() => {
+                  const existing = pr._links_edit !== undefined ? pr._links_edit : (
+                    Array.isArray(pr.links) ? pr.links : []
+                  )
+                  return (
+                    <div style={{marginBottom:'12px'}}>
+                      {existing.map((link, li) => (
+                        <div key={li} style={{display:'grid',gridTemplateColumns:'200px 1fr 80px',gap:'8px',marginBottom:'8px'}}>
+                          <input placeholder="Label (e.g. GitHub)" value={link.label || ''} 
+                            onChange={e => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _links_edit: (r._links_edit || existing).map((x,ii) => ii===li ? { ...x, label: e.target.value } : x) } : r))} 
+                            style={{padding:'8px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
+                          <input placeholder="URL" value={link.url || ''} 
+                            onChange={e => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _links_edit: (r._links_edit || existing).map((x,ii) => ii===li ? { ...x, url: e.target.value } : x) } : r))} 
+                            style={{padding:'8px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
+                          <button onClick={() => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _links_edit: (r._links_edit || existing).filter((_,ii) => ii!==li) } : r))} 
+                            style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+                        </div>
+                      ))}
+                      <div style={{display:'flex',gap:'8px'}}>
+                        <button onClick={() => setProjects(rows => rows.map(r => r.id === pr.id ? { ...r, _links_edit: [...(r._links_edit || existing), { label: '', url: '' }] } : r))} 
+                          style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Link</button>
+                        <button onClick={() => saveProjectLinks(pr.id, (pr._links_edit !== undefined ? pr._links_edit : existing))} 
+                          style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Save Links</button>
+                      </div>
+                      <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Examples: GitHub, YouTube Demo, Live Site, Documentation, etc.</div>
+                    </div>
+                  )
+                })()}
               </div>
             ))}
             <AddButton onClick={() => addRow('projects', { order: projects.length + 1, title: 'New Project', description: '', tags: [], live_url: '', repo_url: '' }, setProjects)}>
