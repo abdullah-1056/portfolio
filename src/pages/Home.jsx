@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import MatrixRain from '../components/MatrixRain'
 import Globe from '../components/Globe'
 import { supabase } from '../lib/supabase'
-import emailjs from '@emailjs/browser'
 
 export default function Home() {
   const [content, setContent] = useState({})
@@ -70,30 +69,28 @@ export default function Home() {
     setFormSubmitting(true)
     setFormMessage('')
     
-    // EmailJS configuration
-    const emailParams = {
-      from_name: formData.fullname,
-      company: formData.company,
-      from_email: formData.email,
-      service: formData.service,
-      budget: formData.budget,
-      message: formData.details
-    }
+    // Web3Forms configuration
+    const formData = new FormData(e.target)
+    formData.append('access_key', 'd9116e57-6a7a-48f4-9db4-e2575a8bb2ac')
     
     try {
-      await emailjs.send(
-        'service_v9xm959',      // Your Service ID
-        'template_a5gfldr',      // Your Template ID
-        emailParams,
-        'W125vURYICQ3EnR9T'      // Your Public Key
-      )
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      })
       
-      setFormMessage('✓ Thank you! Your inquiry has been sent successfully.')
-      setFormData({ fullname: '', company: '', email: '', service: '', budget: '', details: '' })
-      setTimeout(() => setFormMessage(''), 5000)
+      const data = await response.json()
+      
+      if (data.success) {
+        setFormMessage('✓ Thank you! Your inquiry has been sent successfully.')
+        setFormData({ fullname: '', company: '', email: '', service: '', budget: '', details: '' })
+        setTimeout(() => setFormMessage(''), 5000)
+      } else {
+        setFormMessage('Error: ' + (data.message || 'Failed to send message'))
+      }
     } catch (error) {
+      console.error('Form Error:', error)
       setFormMessage('Error: Failed to send message. Please try again.')
-      console.error('EmailJS Error:', error)
     } finally {
       setFormSubmitting(false)
     }
@@ -435,7 +432,7 @@ export default function Home() {
                   
                   <div className="form-group">
                     <label htmlFor="fullname">Full Name*</label>
-                    <input type="text" id="fullname" placeholder="Jane Cooper" required 
+                    <input type="text" id="fullname" name="name" placeholder="Jane Cooper" required 
                       value={formData.fullname} 
                       onChange={e => setFormData({...formData, fullname: e.target.value})} />
                   </div>
@@ -443,13 +440,13 @@ export default function Home() {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="company">Company name*</label>
-                      <input type="text" id="company" placeholder="Ex. Tesla Inc" required 
+                      <input type="text" id="company" name="company" placeholder="Ex. Tesla Inc" required 
                         value={formData.company} 
                         onChange={e => setFormData({...formData, company: e.target.value})} />
                     </div>
                     <div className="form-group">
                       <label htmlFor="email">Email*</label>
-                      <input type="email" id="email" placeholder="You@Example.Com" required 
+                      <input type="email" id="email" name="email" placeholder="You@Example.Com" required 
                         value={formData.email} 
                         onChange={e => setFormData({...formData, email: e.target.value})} />
                     </div>
@@ -458,33 +455,33 @@ export default function Home() {
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="service">Service required*</label>
-                      <select id="service" required 
+                      <select id="service" name="service" required 
                         value={formData.service} 
                         onChange={e => setFormData({...formData, service: e.target.value})}>
                         <option value="">Select Your Service</option>
-                        <option value="web-dev">Web Development</option>
-                        <option value="ui-ux">UI/UX Design</option>
-                        <option value="consulting">Consulting</option>
-                        <option value="other">Other</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="UI/UX Design">UI/UX Design</option>
+                        <option value="Consulting">Consulting</option>
+                        <option value="Other">Other</option>
                       </select>
                     </div>
                     <div className="form-group">
                       <label htmlFor="budget">Project budget*</label>
-                      <select id="budget" required 
+                      <select id="budget" name="budget" required 
                         value={formData.budget} 
                         onChange={e => setFormData({...formData, budget: e.target.value})}>
                         <option value="">Select Your Range</option>
-                        <option value="1k-5k">$1,000 - $5,000</option>
-                        <option value="5k-10k">$5,000 - $10,000</option>
-                        <option value="10k-25k">$10,000 - $25,000</option>
-                        <option value="25k+">$25,000+</option>
+                        <option value="$1,000 - $5,000">$1,000 - $5,000</option>
+                        <option value="$5,000 - $10,000">$5,000 - $10,000</option>
+                        <option value="$10,000 - $25,000">$10,000 - $25,000</option>
+                        <option value="$25,000+">$25,000+</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="details">Project details*</label>
-                    <textarea id="details" rows="4" placeholder="Tell us more about your idea" required 
+                    <textarea id="details" name="message" rows="4" placeholder="Tell us more about your idea" required 
                       value={formData.details} 
                       onChange={e => setFormData({...formData, details: e.target.value})}></textarea>
                   </div>
