@@ -404,6 +404,59 @@ function AdminDashboard({ logout }) {
         {activeSection === 'header' && (
           <Section title="Header">
             <Field label="Logo Name" value={content.header_name || ''} onChange={v => sc('header_name', v)} hint="Shown next to the ◆ diamond in the top-left" />
+            <Divider label="Resume" />
+            
+            {content.resume_url && (
+              <div style={{marginBottom:'16px',border:'1px solid var(--line)',padding:'16px',background:'rgba(0,0,0,0.02)'}}>
+                <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>Current Resume:</div>
+                <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                  <a href={content.resume_url} target="_blank" rel="noopener" style={{color:'var(--accent-blue)',fontSize:'13px',textDecoration:'underline'}}>
+                    View Resume →
+                  </a>
+                  <button 
+                    onClick={async () => {
+                      if (!window.confirm('Delete current resume from storage?')) return
+                      await deleteFileFromStorage('resumes', content.resume_url)
+                      sc('resume_url', '')
+                      toast(null)
+                    }}
+                    style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
+                    DELETE
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div style={{marginBottom:'16px'}}>
+              <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload Resume (PDF)</label>
+              <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                <input 
+                  type="file" 
+                  accept=".pdf,application/pdf" 
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+                    
+                    if (!file.type.includes('pdf')) {
+                      toast(new Error('Please upload a PDF file'))
+                      return
+                    }
+                    
+                    setMsg('Uploading resume...')
+                    const path = `Abdullah_Al_Ifaque_Resume.pdf`
+                    const publicUrl = await uploadFileToStorage('resumes', path, file)
+                    
+                    if (publicUrl) {
+                      sc('resume_url', publicUrl)
+                      setMsg('✓ Resume uploaded successfully')
+                      setTimeout(() => setMsg(''), 3000)
+                    }
+                    e.target.value = '' // Reset input
+                  }}
+                />
+              </div>
+              <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>PDF files only. Will be saved to Supabase Storage.</div>
+            </div>
           </Section>
         )}
 

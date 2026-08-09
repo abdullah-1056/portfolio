@@ -156,8 +156,34 @@ export default function Home() {
               <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE <br/>SECURED.')}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
               <div className="btn-row">
-                <button className="btn primary">{get('hero_btn1', 'GET STARTED →')}</button>
-                <button className="btn">{get('hero_btn2', 'EXPLORE MORE →')}</button>
+                <a 
+                  href={get('resume_url', '#')} 
+                  target="_blank" 
+                  rel="noopener" 
+                  className="btn primary"
+                  onClick={(e) => {
+                    const url = get('resume_url', '')
+                    if (url && url !== '#') {
+                      e.preventDefault()
+                      // Fetch and download
+                      fetch(url)
+                        .then(res => res.blob())
+                        .then(blob => {
+                          const blobUrl = window.URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = blobUrl
+                          a.download = 'Abdullah_Al_Ifaque_Resume.pdf'
+                          document.body.appendChild(a)
+                          a.click()
+                          document.body.removeChild(a)
+                          window.URL.revokeObjectURL(blobUrl)
+                        })
+                        .catch(err => console.error('Download failed:', err))
+                    }
+                  }}
+                >
+                  DOWNLOAD RESUME →
+                </a>
               </div>
             </div>
           </div>
