@@ -465,8 +465,6 @@ function AdminDashboard({ logout }) {
           <Section title="01 — Home Hero">
             <Field label="Headline (HTML allowed)" value={content.hero_headline || ''} onChange={v => sc('hero_headline', v)} hint="Use <br/> for line breaks" />
             <Field label="Subtext" value={content.hero_subtext || ''} onChange={v => sc('hero_subtext', v)} multiline />
-            <Field label="Primary Button Text" value={content.hero_btn1 || ''} onChange={v => sc('hero_btn1', v)} hint="Default: GET STARTED →" />
-            <Field label="Secondary Button Text" value={content.hero_btn2 || ''} onChange={v => sc('hero_btn2', v)} hint="Default: EXPLORE MORE →" />
           </Section>
         )}
 
