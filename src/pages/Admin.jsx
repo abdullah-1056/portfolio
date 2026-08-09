@@ -324,8 +324,31 @@ function AdminDashboard({ logout }) {
     toast(null)
   }
 
-  // delete row
+  // delete row - special handling for projects to clean up images
   const deleteRow = async (table, id, setRows, rows) => {
+    // Special handling for projects: delete all images from Storage
+    if (table === 'projects') {
+      const project = rows.find(r => r.id === id)
+      if (project) {
+        if (!window.confirm(`Delete project "${project.title}" and all its images from storage?`)) return
+        
+        // Delete featured image
+        if (project.image_url) {
+          await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
+        }
+        
+        // Delete all gallery images
+        if (Array.isArray(project.images)) {
+          for (const imgUrl of project.images) {
+            await deleteFileFromStorage(SUPABASE_BUCKET, imgUrl)
+          }
+        }
+        
+        setMsg('Deleting project and images...')
+      }
+    }
+    
+    // Delete from database
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) return toast(error)
     setRows(rows.filter(r => r.id !== id))

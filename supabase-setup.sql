@@ -70,6 +70,19 @@ CREATE TABLE IF NOT EXISTS achievements (
   image_url TEXT
 );
 
+-- Contact form submissions
+CREATE TABLE IF NOT EXISTS contact_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT NOT NULL,
+  company TEXT,
+  email TEXT NOT NULL,
+  service TEXT,
+  budget TEXT,
+  details TEXT,
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  read BOOLEAN DEFAULT false
+);
+
 -- Row Level Security (RLS)
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE triplet_items ENABLE ROW LEVEL SECURITY;
@@ -80,6 +93,9 @@ ALTER TABLE education ENABLE ROW LEVEL SECURITY;
 
 -- Row Level Security (RLS) for achievements
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+
+-- Row Level Security for contact submissions
+ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
 
 -- Supabase Storage bucket for project images
 INSERT INTO storage.buckets (id, name, public)
@@ -106,6 +122,19 @@ CREATE POLICY "Public read education" ON education FOR SELECT USING (true);
 -- Public read access for achievements
 DROP POLICY IF EXISTS "Public read achievements" ON achievements;
 CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true);
+
+-- Contact submissions policies
+DROP POLICY IF EXISTS "Anyone can submit contact form" ON contact_submissions;
+CREATE POLICY "Anyone can submit contact form" ON contact_submissions
+FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can read submissions" ON contact_submissions;
+CREATE POLICY "Authenticated users can read submissions" ON contact_submissions
+FOR SELECT USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Authenticated users can update submissions" ON contact_submissions;
+CREATE POLICY "Authenticated users can update submissions" ON contact_submissions
+FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 -- Note: Storage bucket policies (for project-images) are managed via Dashboard
 -- See instructions below after running this SQL

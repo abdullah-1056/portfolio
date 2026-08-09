@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import MatrixRain from '../components/MatrixRain'
 import Globe from '../components/Globe'
 import { supabase } from '../lib/supabase'
+import emailjs from '@emailjs/browser'
 
 export default function Home() {
   const [content, setContent] = useState({})
@@ -53,6 +54,50 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [currentProject, setCurrentProject] = useState(null)
+  const [formData, setFormData] = useState({
+    fullname: '',
+    company: '',
+    email: '',
+    service: '',
+    budget: '',
+    details: ''
+  })
+  const [formSubmitting, setFormSubmitting] = useState(false)
+  const [formMessage, setFormMessage] = useState('')
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault()
+    setFormSubmitting(true)
+    setFormMessage('')
+    
+    // EmailJS configuration
+    const emailParams = {
+      from_name: formData.fullname,
+      company: formData.company,
+      from_email: formData.email,
+      service: formData.service,
+      budget: formData.budget,
+      message: formData.details
+    }
+    
+    try {
+      await emailjs.send(
+        'service_v9xm959',      // Your Service ID
+        'template_a5gfldr',      // Your Template ID
+        emailParams,
+        'W125vURYICQ3EnR9T'      // Your Public Key
+      )
+      
+      setFormMessage('✓ Thank you! Your inquiry has been sent successfully.')
+      setFormData({ fullname: '', company: '', email: '', service: '', budget: '', details: '' })
+      setTimeout(() => setFormMessage(''), 5000)
+    } catch (error) {
+      setFormMessage('Error: Failed to send message. Please try again.')
+      console.error('EmailJS Error:', error)
+    } finally {
+      setFormSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -381,27 +426,41 @@ export default function Home() {
                 <p>{get('contact_subtext', "We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.")}</p>
               </div>
               <div className="contact-form-panel">
-                <form className="contact-form">
+                <form className="contact-form" onSubmit={handleContactSubmit}>
+                  {formMessage && (
+                    <div style={{padding:'12px',marginBottom:'16px',background: formMessage.startsWith('Error') ? '#ff4444' : '#4ade80',color:'#000',fontSize:'13px',fontWeight:'600',borderRadius:'4px'}}>
+                      {formMessage}
+                    </div>
+                  )}
+                  
                   <div className="form-group">
                     <label htmlFor="fullname">Full Name*</label>
-                    <input type="text" id="fullname" placeholder="Jane Cooper" required />
+                    <input type="text" id="fullname" placeholder="Jane Cooper" required 
+                      value={formData.fullname} 
+                      onChange={e => setFormData({...formData, fullname: e.target.value})} />
                   </div>
                   
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="company">Company name*</label>
-                      <input type="text" id="company" placeholder="Ex. Tesla Inc" required />
+                      <input type="text" id="company" placeholder="Ex. Tesla Inc" required 
+                        value={formData.company} 
+                        onChange={e => setFormData({...formData, company: e.target.value})} />
                     </div>
                     <div className="form-group">
                       <label htmlFor="email">Email*</label>
-                      <input type="email" id="email" placeholder="You@Example.Com" required />
+                      <input type="email" id="email" placeholder="You@Example.Com" required 
+                        value={formData.email} 
+                        onChange={e => setFormData({...formData, email: e.target.value})} />
                     </div>
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="service">Service required*</label>
-                      <select id="service" required>
+                      <select id="service" required 
+                        value={formData.service} 
+                        onChange={e => setFormData({...formData, service: e.target.value})}>
                         <option value="">Select Your Service</option>
                         <option value="web-dev">Web Development</option>
                         <option value="ui-ux">UI/UX Design</option>
@@ -411,7 +470,9 @@ export default function Home() {
                     </div>
                     <div className="form-group">
                       <label htmlFor="budget">Project budget*</label>
-                      <select id="budget" required>
+                      <select id="budget" required 
+                        value={formData.budget} 
+                        onChange={e => setFormData({...formData, budget: e.target.value})}>
                         <option value="">Select Your Range</option>
                         <option value="1k-5k">$1,000 - $5,000</option>
                         <option value="5k-10k">$5,000 - $10,000</option>
@@ -423,10 +484,14 @@ export default function Home() {
 
                   <div className="form-group">
                     <label htmlFor="details">Project details*</label>
-                    <textarea id="details" rows="4" placeholder="Tell us more about your idea" required></textarea>
+                    <textarea id="details" rows="4" placeholder="Tell us more about your idea" required 
+                      value={formData.details} 
+                      onChange={e => setFormData({...formData, details: e.target.value})}></textarea>
                   </div>
 
-                  <button type="submit" className="btn-submit">Send Inquiry</button>
+                  <button type="submit" className="btn-submit" disabled={formSubmitting}>
+                    {formSubmitting ? 'Sending...' : 'Send Inquiry'}
+                  </button>
                   
                   <p className="form-footer">
                     Not interested to <span className="dim">submit the form?</span> <a href="#" onClick={(e) => { e.preventDefault(); setShowModal(true); }} className="book-call">Book A Call Directly</a>
