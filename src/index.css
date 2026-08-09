@@ -66,7 +66,7 @@ nav ul{
 }
 
 nav a{
-  font-size:14px;
+  font-size:16px;
   letter-spacing:0.05em;
   color:var(--text-faint);
   transition:color .25s ease;
@@ -87,7 +87,7 @@ section{
 }
 
 .section-label{
-  font-size:15px;
+  font-size:17px;
   letter-spacing:0.08em;
   color:var(--text-faint);
   margin-bottom:40px;
@@ -144,7 +144,7 @@ section{
   max-width:560px;
   margin:0 auto 44px;
   color:var(--text-dim);
-  font-size:16px;
+  font-size:18px;
   line-height:1.8;
 }
 
@@ -157,7 +157,7 @@ section{
 
 .btn{
   padding:14px 28px;
-  font-size:14px;
+  font-size:16px;
   letter-spacing:0.06em;
   border:1px solid rgba(255,255,255,0.3);
   background:transparent;
@@ -206,7 +206,7 @@ section{
 .name-block p{
   max-width:480px;
   color:var(--text-dim);
-  font-size:16px;
+  font-size:18px;
   margin-bottom:30px;
 }
 
@@ -221,7 +221,7 @@ section{
   font-weight:800;
 }
 .side-stats .l{
-  font-size:13px;
+  font-size:15px;
   color:var(--text-faint);
   letter-spacing:0.08em;
   text-transform:uppercase;
@@ -246,14 +246,14 @@ section{
   padding-bottom:60px;
 }
 .triplet h3{
-  font-size:14px;
+  font-size:16px;
   letter-spacing:0.04em;
   text-transform:uppercase;
   margin-bottom:16px;
   font-weight:700;
 }
 .triplet p{
-  font-size:15px;
+  font-size:17px;
   color:var(--text-dim);
   max-width:340px;
 }
@@ -453,7 +453,7 @@ section{
   margin-bottom:10px;
 }
 .thesis-desc{
-  font-size:13px;
+  font-size:15px;
   color:var(--text-dim);
   line-height:1.6;
   margin-bottom:20px;
@@ -552,7 +552,7 @@ section{
 }
 
 .skill-cat{
-  font-size:13px;
+  font-size:15px;
   letter-spacing:0.06em;
   text-transform:uppercase;
   color:var(--accent-blue);
@@ -561,7 +561,7 @@ section{
 }
 
 .skill-row p{
-  font-size:16px;
+  font-size:18px;
   color:var(--text-dim);
   max-width:480px;
   margin-bottom:32px;
@@ -579,7 +579,7 @@ section{
 .tag{
   border:1px solid rgba(255,255,255,0.15);
   padding:8px 16px;
-  font-size:12px;
+  font-size:14px;
   letter-spacing:0.05em;
   text-transform:uppercase;
   color:var(--text-dim);
@@ -598,7 +598,7 @@ section{
   padding:12px 20px;
   border:1px solid rgba(161, 202, 221, 0.3);
   color:var(--accent-blue);
-  font-size:12px;
+  font-size:14px;
   letter-spacing:0.05em;
   text-decoration:none;
   text-transform:uppercase;
@@ -692,7 +692,7 @@ section{
   font-weight:700;
 }
 .project-card h3{
-  font-size:16px;
+  font-size:18px;
   text-transform:uppercase;
   font-weight:700;
   letter-spacing:0.02em;
@@ -700,7 +700,7 @@ section{
   line-height:1.3;
 }
 .project-card p{
-  font-size:15px;
+  font-size:17px;
   color:var(--text-dim);
   line-height:1.6;
   margin-bottom:20px;
@@ -712,7 +712,7 @@ section{
   margin-bottom:20px;
 }
 .project-tag{
-  font-size:10px;
+  font-size:12px;
   padding:4px 10px;
   border:1px solid rgba(255,255,255,0.2);
   color:var(--text-faint);
@@ -725,7 +725,7 @@ section{
   flex-wrap:wrap;
 }
 .project-link{
-  font-size:11px;
+  font-size:13px;
   color:var(--accent-orange);
   text-decoration:none;
   display:inline-flex;
@@ -824,7 +824,7 @@ section{
   font-weight:700;
 }
 .achievement-card h3{
-  font-size:16px;
+  font-size:18px;
   text-transform:uppercase;
   font-weight:700;
   letter-spacing:0.02em;
@@ -835,7 +835,7 @@ section{
   display:flex;
   gap:16px;
   margin-bottom:16px;
-  font-size:11px;
+  font-size:13px;
 }
 .achievement-meta .issuer{
   color:var(--accent-orange);
@@ -845,7 +845,7 @@ section{
   color:var(--text-faint);
 }
 .achievement-card p{
-  font-size:13px;
+  font-size:15px;
   color:var(--text-dim);
   line-height:1.6;
   margin-bottom:20px;
@@ -873,7 +873,7 @@ section{
 }
 
 .ach-list-title{
-  font-size:13px;
+  font-size:15px;
   font-weight:700;
   letter-spacing:0.06em;
   text-transform:uppercase;
@@ -891,7 +891,7 @@ section{
 }
 
 .ach-list ul li{
-  font-size:13px;
+  font-size:15px;
   color:var(--text-dim);
   padding-left:20px;
   position:relative;
@@ -944,7 +944,7 @@ section{
 .cta-left p{
   max-width:480px;
   color:var(--text-dim);
-  font-size:16px;
+  font-size:18px;
   margin-bottom:34px;
 }
 .contact-form-panel{
@@ -960,7 +960,7 @@ section{
 }
 .form-group label{
   display:block;
-  font-size:11px;
+  font-size:13px;
   color:var(--text-dim);
   margin-bottom:8px;
   text-transform:uppercase;
@@ -975,7 +975,7 @@ section{
   border:1px solid var(--line);
   color:var(--text-primary);
   font-family:var(--mono);
-  font-size:15px;
+  font-size:16px;
   transition:border-color 0.3s ease;
 }
 .form-group input:focus,
@@ -1007,7 +1007,7 @@ section{
   background:var(--accent-blue);
   color:#000;
   border:none;
-  font-size:12px;
+  font-size:14px;
   letter-spacing:0.06em;
   text-transform:uppercase;
   font-weight:700;
@@ -1020,7 +1020,7 @@ section{
 }
 .form-footer{
   margin-top:20px;
-  font-size:11px;
+  font-size:13px;
   color:var(--text-dim);
   text-align:center;
 }
