@@ -5,8 +5,9 @@ import { supabase } from '../lib/supabase'
 const ADMIN_BG = '#f9f9f6'
 const ADMIN_BG_ALT = '#26e815'
 const ADMIN_TEXT = '#000'
-// Supabase storage bucket (set VITE_SUPABASE_BUCKET in env or dashboard)
+// Supabase storage buckets (set VITE_SUPABASE_BUCKET in env or dashboard)
 const SUPABASE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET || 'project-images'
+const WRITEUPS_BUCKET = 'writeups' // Separate bucket for writeup PDFs
 
 // ─── Auth Shell ────────────────────────────────────────────────────────────────
 export default function Admin() {
@@ -348,18 +349,29 @@ function AdminDashboard({ logout }) {
       }
     }
     
-    // Special handling for skills: delete image from Storage
+    // Special handling for skills: delete image and writeups from Storage
     if (table === 'skills') {
       const skill = rows.find(r => r.id === id)
       if (skill) {
-        if (!window.confirm(`Delete skill "${skill.category}"?`)) return
+        if (!window.confirm(`Delete skill "${skill.category}" and all its files?`)) return
         
         // Delete skill image if exists
         if (skill.image_url) {
           await deleteFileFromStorage(SUPABASE_BUCKET, skill.image_url)
         }
         
-        setMsg('Deleting skill and image...')
+        // Delete all writeup PDFs from Storage (if they're hosted in Supabase)
+        if (Array.isArray(skill.writeups)) {
+          for (const writeup of skill.writeups) {
+            if (writeup.url && writeup.url.includes('/storage/v1/object/public/')) {
+              // Detect which bucket the file is in from the URL
+              const bucket = writeup.url.includes('/writeups/') ? WRITEUPS_BUCKET : SUPABASE_BUCKET
+              await deleteFileFromStorage(bucket, writeup.url)
+            }
+          }
+        }
+        
+        setMsg('Deleting skill, image, and writeups...')
       }
     }
     
@@ -655,6 +667,7 @@ function AdminDashboard({ logout }) {
                 
                 <Field label="Icon SVG / HTML (fallback)" value={s.icon_svg || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'icon_svg', v)} multiline hint="Raw SVG or <i> tag — used when no image is uploaded" />
                 <Divider label="Writeup Links (optional)" />
+                
                 {(() => {
                   const existing = s._writeups_edit !== undefined ? s._writeups_edit : (
                     Array.isArray(s.writeups) ? s.writeups : (
@@ -663,18 +676,67 @@ function AdminDashboard({ logout }) {
                       )
                     )
                   )
+                  
+                  // Helper to check if URL is from Supabase Storage
+                  const isSupabaseStorageUrl = (url) => {
+                    if (!url) return false
+                    return url.includes('/storage/v1/object/public/')
+                  }
+                  
                   return (
                     <div style={{marginBottom:'12px'}}>
                       {existing.map((w, wi) => (
-                        <div key={wi} style={{display:'grid',gridTemplateColumns:'1fr 360px 80px',gap:'8px',marginBottom:'8px'}}>
+                        <div key={wi} style={{marginBottom:'8px'}}>
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 360px 80px',gap:'8px'}}>
                             <input placeholder="Label" value={w.label || ''} onChange={e => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).map((x,ii) => ii===wi ? { ...x, label: e.target.value } : x) } : r))} style={{padding:'8px',background:ADMIN_BG_ALT,color:ADMIN_TEXT,border:'1px solid rgba(88, 221, 39, 0.12)'}} />
                             <input placeholder="URL" value={w.url || ''} onChange={e => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).map((x,ii) => ii===wi ? { ...x, url: e.target.value } : x) } : r))} style={{padding:'8px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(35, 245, 39, 0.12)'}} />
-                          <button onClick={() => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: (r._writeups_edit || existing).filter((_,ii) => ii!==wi) } : r))} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+                            <button 
+                              onClick={async () => {
+                                if (!window.confirm('Remove this writeup? (Files in Supabase Storage will be deleted)')) return
+                                
+                                // Delete from storage if it's a Supabase Storage URL
+                                if (isSupabaseStorageUrl(w.url)) {
+                                  // Detect which bucket the file is in from the URL
+                                  const bucket = w.url.includes('/writeups/') ? WRITEUPS_BUCKET : SUPABASE_BUCKET
+                                  await deleteFileFromStorage(bucket, w.url)
+                                }
+                                
+                                // Remove from array
+                                const updatedWriteups = (s._writeups_edit || existing).filter((_,ii) => ii!==wi)
+                                
+                                // Save to database immediately
+                                const { error } = await supabase.from('skills').update({ writeups: updatedWriteups }).eq('id', s.id)
+                                if (error) {
+                                  toast(error)
+                                  return
+                                }
+                                
+                                // Update local state
+                                setSkills(rows => rows.map(r => r.id === s.id ? { ...r, writeups: updatedWriteups, _writeups_edit: undefined } : r))
+                                toast(null)
+                              }} 
+                              style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>
+                              Remove
+                            </button>
+                          </div>
+                          {isSupabaseStorageUrl(w.url) && (
+                            <div style={{fontSize:'10px',color:'var(--accent-blue)',marginTop:'4px',marginLeft:'4px'}}>
+                              📁 Stored in Supabase (will be deleted when removed)
+                            </div>
+                          )}
+                          {w.url && w.url.includes('drive.google.com') && (
+                            <div style={{fontSize:'10px',color:'var(--text-faint)',marginTop:'4px',marginLeft:'4px'}}>
+                              🔗 External Google Drive link (not stored in Supabase)
+                            </div>
+                          )}
                         </div>
                       ))}
-                      <div style={{display:'flex',gap:'8px'}}>
-                        <button onClick={() => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: [...(r._writeups_edit || existing), { label: '', url: '' }] } : r))} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Writeup</button>
+                      <div style={{display:'flex',gap:'8px',marginTop:'12px'}}>
+                        <button onClick={() => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _writeups_edit: [...(r._writeups_edit || existing), { label: '', url: '' }] } : r))} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Manual Link</button>
                         <button onClick={() => saveWriteups('skills', skills, setSkills, s.id, (s._writeups_edit !== undefined ? s._writeups_edit : existing))} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Save Writeups</button>
+                      </div>
+                      <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>
+                        Click "+ Add Manual Link" to add external URLs like Google Drive, PDFs, or articles.
                       </div>
                     </div>
                   )
