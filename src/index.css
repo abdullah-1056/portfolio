@@ -212,7 +212,7 @@ section{
   height:200px;
   object-fit:cover;
   border:3px solid var(--accent-blue);
-  border-radius:4px;
+  border-radius:50%;
   display:block;
   transition:border-color 0.3s ease;
 }
