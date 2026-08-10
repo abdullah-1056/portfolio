@@ -348,6 +348,21 @@ function AdminDashboard({ logout }) {
       }
     }
     
+    // Special handling for skills: delete image from Storage
+    if (table === 'skills') {
+      const skill = rows.find(r => r.id === id)
+      if (skill) {
+        if (!window.confirm(`Delete skill "${skill.category}"?`)) return
+        
+        // Delete skill image if exists
+        if (skill.image_url) {
+          await deleteFileFromStorage(SUPABASE_BUCKET, skill.image_url)
+        }
+        
+        setMsg('Deleting skill and image...')
+      }
+    }
+    
     // Delete from database
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) return toast(error)
@@ -581,8 +596,64 @@ function AdminDashboard({ logout }) {
                   onChange={v => setSkills(rows => rows.map(r => r.id === s.id ? { ...r, _tags_edit: v } : r))}
                   onBlur={v => saveField('skills', skills, setSkills, s.id, 'tags', v)}
                   hint="e.g. React, TypeScript, CSS" />
-                <Field label="Image URL (shows in black box)" value={s.image_url || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'image_url', v)} hint="Paste any image URL or leave blank for SVG icon" />
-                <Field label="Icon SVG / HTML (fallback)" value={s.icon_svg || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'icon_svg', v)} multiline hint="Raw SVG or <i> tag — used when Image URL is empty" />
+                
+                <Divider label="Skill Image (shows in black box)" />
+                
+                {s.image_url && (
+                  <div style={{marginBottom:'16px',border:'1px solid var(--line)',padding:'16px',background:'rgba(0,0,0,0.02)'}}>
+                    <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>Current Image:</div>
+                    <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                      <img src={s.image_url} alt={s.category} style={{width:'100px',height:'100px',objectFit:'cover',border:'2px solid var(--accent-blue)'}} />
+                      <button 
+                        onClick={async () => {
+                          if (!window.confirm('Delete this skill image from storage?')) return
+                          await deleteFileFromStorage(SUPABASE_BUCKET, s.image_url)
+                          updateRow('skills', skills, setSkills, s.id, 'image_url', '')
+                          toast(null)
+                        }}
+                        style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
+                        DELETE IMAGE
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{marginBottom:'16px'}}>
+                  <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload Skill Image</label>
+                  <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                    <input 
+                      type="file" 
+                      accept="image/jpeg,image/jpg,image/png,image/webp" 
+                      onChange={async (e) => {
+                        const file = e.target.files[0]
+                        if (!file) return
+                        
+                        if (!file.type.startsWith('image/')) {
+                          toast(new Error('Please upload an image file (JPG, PNG, WebP)'))
+                          return
+                        }
+                        
+                        setMsg('Uploading skill image...')
+                        const path = `skills/${s.id}_${Date.now()}.${file.name.split('.').pop()}`
+                        const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+                        
+                        if (publicUrl) {
+                          // Delete old image if exists
+                          if (s.image_url) {
+                            await deleteFileFromStorage(SUPABASE_BUCKET, s.image_url)
+                          }
+                          updateRow('skills', skills, setSkills, s.id, 'image_url', publicUrl)
+                          setMsg('✓ Skill image uploaded successfully')
+                          setTimeout(() => setMsg(''), 3000)
+                        }
+                        e.target.value = '' // Reset input
+                      }}
+                    />
+                  </div>
+                  <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Upload an image to show in the black box. JPG, PNG, or WebP. Leave empty to use SVG icon below.</div>
+                </div>
+                
+                <Field label="Icon SVG / HTML (fallback)" value={s.icon_svg || ''} onChange={v => updateRow('skills', skills, setSkills, s.id, 'icon_svg', v)} multiline hint="Raw SVG or <i> tag — used when no image is uploaded" />
                 <Divider label="Writeup Links (optional)" />
                 {(() => {
                   const existing = s._writeups_edit !== undefined ? s._writeups_edit : (
