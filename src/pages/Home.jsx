@@ -195,6 +195,11 @@ export default function Home() {
             <div className="about-content">
               <div className="name-block">
                 <br />
+                {get('profile_image_url') && (
+                  <div className="profile-image-container">
+                    <img src={get('profile_image_url')} alt="Profile" className="profile-image" />
+                  </div>
+                )}
                 <h1 dangerouslySetInnerHTML={{__html: get('about_name', 'ABDULLAH AL<br>IFAQUE.')}} />
                 <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly.')}</p>
               </div>

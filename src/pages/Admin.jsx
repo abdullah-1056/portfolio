@@ -471,6 +471,63 @@ function AdminDashboard({ logout }) {
         {/* ── ABOUT ── */}
         {activeSection === 'about' && (
           <Section title="02 — About">
+            <Divider label="Profile Picture" />
+            
+            {content.profile_image_url && (
+              <div style={{marginBottom:'16px',border:'1px solid var(--line)',padding:'16px',background:'rgba(0,0,0,0.02)'}}>
+                <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>Current Profile Picture:</div>
+                <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                  <img src={content.profile_image_url} alt="Profile" style={{width:'120px',height:'120px',objectFit:'cover',border:'2px solid var(--accent-blue)',borderRadius:'4px'}} />
+                  <button 
+                    onClick={async () => {
+                      if (!window.confirm('Delete profile picture from storage?')) return
+                      await deleteFileFromStorage('profile-images', content.profile_image_url)
+                      sc('profile_image_url', '')
+                      toast(null)
+                    }}
+                    style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
+                    DELETE
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div style={{marginBottom:'16px'}}>
+              <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload Profile Picture</label>
+              <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+                    
+                    if (!file.type.startsWith('image/')) {
+                      toast(new Error('Please upload an image file (JPG, PNG, WebP)'))
+                      return
+                    }
+                    
+                    setMsg('Uploading profile picture...')
+                    const path = `profile_${Date.now()}.${file.name.split('.').pop()}`
+                    const publicUrl = await uploadFileToStorage('profile-images', path, file)
+                    
+                    if (publicUrl) {
+                      // Delete old image if exists
+                      if (content.profile_image_url) {
+                        await deleteFileFromStorage('profile-images', content.profile_image_url)
+                      }
+                      sc('profile_image_url', publicUrl)
+                      setMsg('✓ Profile picture uploaded successfully')
+                      setTimeout(() => setMsg(''), 3000)
+                    }
+                    e.target.value = '' // Reset input
+                  }}
+                />
+              </div>
+              <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Recommended: 200x200px or larger, square image. JPG, PNG, or WebP.</div>
+            </div>
+            
+            <Divider label="About Info" />
             <Field label="Name (HTML allowed)" value={content.about_name || ''} onChange={v => sc('about_name', v)} hint="Use <br> for line breaks" />
             <Field label="Bio" value={content.about_bio || ''} onChange={v => sc('about_bio', v)} multiline />
             <Divider label="Side Stats" />
