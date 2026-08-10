@@ -481,7 +481,7 @@ function AdminDashboard({ logout }) {
                   <button 
                     onClick={async () => {
                       if (!window.confirm('Delete profile picture from storage?')) return
-                      await deleteFileFromStorage('profile-images', content.profile_image_url)
+                      await deleteFileFromStorage(SUPABASE_BUCKET, content.profile_image_url)
                       sc('profile_image_url', '')
                       toast(null)
                     }}
@@ -508,13 +508,13 @@ function AdminDashboard({ logout }) {
                     }
                     
                     setMsg('Uploading profile picture...')
-                    const path = `profile_${Date.now()}.${file.name.split('.').pop()}`
-                    const publicUrl = await uploadFileToStorage('profile-images', path, file)
+                    const path = `profile/profile_${Date.now()}.${file.name.split('.').pop()}`
+                    const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
                     
                     if (publicUrl) {
                       // Delete old image if exists
                       if (content.profile_image_url) {
-                        await deleteFileFromStorage('profile-images', content.profile_image_url)
+                        await deleteFileFromStorage(SUPABASE_BUCKET, content.profile_image_url)
                       }
                       sc('profile_image_url', publicUrl)
                       setMsg('✓ Profile picture uploaded successfully')
