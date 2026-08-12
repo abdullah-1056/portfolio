@@ -864,26 +864,6 @@ function AdminDashboard({ logout }) {
               </div>
               {achTab === 'achievements' ? <ListEditor contentKey={'achievements_list'} /> : <ListEditor contentKey={'certificates_list'} />}
             </div>
-
-            <Divider label="Individual Achievement Cards (DB rows)" />
-            {achievements.map((a, i) => (
-              <div key={a.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(13, 196, 246, 0.01)'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
-                  <Label>ACHIEVEMENT {i + 1}</Label>
-                  <DeleteButton onClick={() => deleteRow('achievements', a.id, setAchievements, achievements)} />
-                </div>
-                <Field label="Title" value={a.title || ''} onChange={v => updateRow('achievements', achievements, setAchievements, a.id, 'title', v)} />
-                <Row>
-                  <Field label="Issuer" value={a.issuer || ''} onChange={v => updateRow('achievements', achievements, setAchievements, a.id, 'issuer', v)} />
-                  <Field label="Date" value={a.date || ''} onChange={v => updateRow('achievements', achievements, setAchievements, a.id, 'date', v)} />
-                </Row>
-                <Field label="Description" value={a.description || ''} onChange={v => updateRow('achievements', achievements, setAchievements, a.id, 'description', v)} multiline />
-                <Field label="Credential URL" value={a.credential_url || ''} onChange={v => updateRow('achievements', achievements, setAchievements, a.id, 'credential_url', v)} />
-              </div>
-            ))}
-            <AddButton onClick={() => addRow('achievements', { order: achievements.length + 1, title: 'New Achievement', issuer: '', date: '', description: '', credential_url: '' }, setAchievements)}>
-              + Add Achievement
-            </AddButton>
           </Section>
         )}
 
