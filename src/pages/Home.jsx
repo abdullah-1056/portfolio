@@ -10,7 +10,7 @@ export default function Home() {
     { id: 2, title: 'BLOCK THE NOISE.', body: 'Focused and deliberate in approach. Every action is purposeful, with zero distractions and clear direction.' },
     { id: 3, title: 'ONE SKILL. MANY DOORS.', body: 'From web development to design, each skill opens new possibilities and creates unique value in every project undertaken.' }
   ])
-  const [steps, setSteps] = useState([
+  const [, setSteps] = useState([
     { id: 1, step_number: '01', title: 'RESEARCH & DISCOVERY', body: 'Before any code is written, the problem is deeply understood. Research drives every decision—ensuring the solution fits perfectly.' },
     { id: 2, step_number: '02', title: 'DESIGN & PROTOTYPE', body: 'Clean interfaces are designed with user experience at the core. Prototypes are built to validate ideas before full development begins.' },
     { id: 3, step_number: '03', title: 'DEVELOP & ITERATE', body: 'Code is written with precision using modern tools and frameworks. Continuous iteration ensures quality at every stage.' },
@@ -44,7 +44,7 @@ export default function Home() {
       image_url: "", writeup_label: "", writeup_url: ""
     }
   ])
-  const [achievements, setAchievements] = useState([])
+  const [, setAchievements] = useState([])
   const [projects, setProjects] = useState([
     { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
     { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
@@ -124,13 +124,6 @@ export default function Home() {
   }
   const achievementsDriveUrl = get('achievements_drive_url', 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing')
   const certificatesDriveUrl = get('certificates_drive_url', 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing')
-  const hiddenAchievements = [
-    ['React Developer Certification', 'Meta'],
-    ['Full Stack Web Development', 'freeCodeCamp'],
-    ['UI/UX Design Fundamentals', 'Google']
-  ]
-  const visibleAchievements = achievements.filter(achievement => !hiddenAchievements.some(([title, issuer]) => achievement.title === title && achievement.issuer === issuer))
-
   return (
     <>
       <MatrixRain />

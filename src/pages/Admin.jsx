@@ -62,7 +62,6 @@ function ListEditor({ contentKey, content, sc }) {
   const raw = content[contentKey] || ''
   const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
   const [local, setLocal] = useState(items)
-  useEffect(() => setLocal(items), [items])
   return (
     <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
       <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
@@ -193,7 +192,7 @@ function AdminDashboard({ logout }) {
   }
 
   // add new row
-  const addRow = async (table, defaults, _setRows) => {
+  const addRow = async (table, defaults) => {
     // attach owner_id from current session when available to satisfy RLS owner policies
     const { data: sessionData } = await supabase.auth.getSession()
     const uid = sessionData?.session?.user?.id
