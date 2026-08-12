@@ -57,18 +57,51 @@ export default function Admin() {
   return <AdminDashboard logout={() => supabase.auth.signOut()} />
 }
 
+// ─── ListEditor (moved outside AdminDashboard so it isn't recreated on every render) ──
+function ListEditor({ contentKey, content, sc }) {
+  const raw = content[contentKey] || ''
+  const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
+  const [local, setLocal] = useState(items)
+  useEffect(() => setLocal(items), [items])
+  return (
+    <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
+      <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+          {local.map((it, idx) => (
+            <div key={idx} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+              <div style={{width:18,textAlign:'center',color:'var(--accent-blue)',fontWeight:700}}>•</div>
+              <input value={it} onChange={e => setLocal(l => l.map((x,i) => i===idx ? e.target.value : x))} style={{padding:'8px',minWidth:'320px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
+              <button onClick={() => {
+                if (!window.confirm('Remove this bullet?')) return
+                const next = local.filter((_,i) => i!==idx)
+                setLocal(next)
+                sc(contentKey, next.join('\n'))
+              }} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:'8px'}}>
+          <button onClick={() => setLocal(l => [...l, ''])} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Bullet</button>
+          <button onClick={() => sc(contentKey, local.join('\n'))} style={{padding:'8px 12px',background:'var(--accent-blue)',cursor:'pointer',color:ADMIN_TEXT,border:'none'}}>Save</button>
+        </div>
+        <div style={{fontSize:'11px',color:'var(--text-faint)'}}>Hint: press Save to persist bullets.</div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 function AdminDashboard({ logout }) {
   const [content, setContent]           = useState({})
   const [triplets, setTriplets]         = useState([])
   const [skills, setSkills]             = useState([])
-  const [, setAchievements] = useState([])
+  const [, setAchievements]             = useState([])
   const [projects, setProjects]         = useState([])
   const [msg, setMsg]                   = useState('')
   const [activeSection, setActiveSection] = useState('header')
   const [achTab, setAchTab] = useState('achievements')
 
- const load = () => {
+  const load = () => {
     Promise.all([
       supabase.from('site_content').select('*'),
       supabase.from('triplet_items').select('*').order('order'),
@@ -159,54 +192,22 @@ function AdminDashboard({ logout }) {
     supabase.from('projects').update({ links: rawArray }).eq('id', id).then(({ error }) => toast(error))
   }
 
-  // Small ListEditor component moved here so hooks are used at top-level of AdminDashboard
-  function ListEditor({ contentKey }) {
-    const raw = content[contentKey] || ''
-    const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
-    const [local, setLocal] = useState(items)
-     useEffect(() => setLocal(items), [items])
-    return (
-      <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
-        <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
-          <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
-            {local.map((it, idx) => (
-              <div key={idx} style={{display:'flex',gap:'8px',alignItems:'center'}}>
-                <div style={{width:18,textAlign:'center',color:'var(--accent-blue)',fontWeight:700}}>•</div>
-                <input value={it} onChange={e => setLocal(l => l.map((x,i) => i===idx ? e.target.value : x))} style={{padding:'8px',minWidth:'320px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
-                <button onClick={() => {
-                  if (!window.confirm('Remove this bullet?')) return
-                  const next = local.filter((_,i) => i!==idx)
-                  setLocal(next)
-                  sc(contentKey, next.join('\n'))
-                }} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
-              </div>
-            ))}
-          </div>
-          <div style={{display:'flex',gap:'8px'}}>
-            <button onClick={() => setLocal(l => [...l, ''])} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Bullet</button>
-            <button onClick={() => sc(contentKey, local.join('\n'))} style={{padding:'8px 12px',background:'var(--accent-blue)',cursor:'pointer',color:ADMIN_TEXT,border:'none'}}>Save</button>
-          </div>
-          <div style={{fontSize:'11px',color:'var(--text-faint)'}}>Hint: press Save to persist bullets.</div>
-        </div>
-      </div>
-    )
-  }
-
   // add new row
- const addRow = async (table, defaults, _setRows) => {
-  const { data: sessionData } = await supabase.auth.getSession()
-  const uid = sessionData?.session?.user?.id
-  const payload = uid ? { ...defaults, owner_id: uid } : defaults
-  const { error } = await supabase.from(table).insert(payload).select()
-  if (error) return toast(error)
-  toast(null)
-  load()
-}
+  const addRow = async (table, defaults, _setRows) => {
+    // attach owner_id from current session when available to satisfy RLS owner policies
+    const { data: sessionData } = await supabase.auth.getSession()
+    const uid = sessionData?.session?.user?.id
+    const payload = uid ? { ...defaults, owner_id: uid } : defaults
+    const { error } = await supabase.from(table).insert(payload).select()
+    if (error) return toast(error)
+    toast(null)
+    load()
+  }
 
   // Upload a file to Supabase Storage and return public URL
   const uploadFileToStorage = async (bucket, path, file) => {
     if (!file) return null
-    const { data, error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: true })
+    const { error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: true })
     if (error) {
       // Provide clearer guidance when bucket is missing
       if (error.message && error.message.toLowerCase().includes('bucket not found')) {
@@ -228,7 +229,7 @@ function AdminDashboard({ logout }) {
       // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
       const match = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
       return match ? match[1] : null
-    } catch (e) {
+    } catch {
       return null
     }
   }
@@ -257,7 +258,6 @@ function AdminDashboard({ logout }) {
     const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
     if (publicUrl) {
       // update DB with the new image_url (exclude _file from update)
-      const { _file, ...cleanRow } = project
       await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
       // update local state
       setProjects(rows => rows.map(r => r.id === project.id ? { ...r, image_url: publicUrl, _file: undefined } : r))
@@ -861,7 +861,9 @@ function AdminDashboard({ logout }) {
                 <button onClick={() => setAchTab('certificates')}
                   style={{padding:'8px 12px',background: achTab==='certificates' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='certificates' ? ADMIN_TEXT : 'var(--text-dim)'}}>Certificates</button>
               </div>
-              {achTab === 'achievements' ? <ListEditor contentKey={'achievements_list'} /> : <ListEditor contentKey={'certificates_list'} />}
+              {achTab === 'achievements'
+                ? <ListEditor contentKey={'achievements_list'} content={content} sc={sc} />
+                : <ListEditor contentKey={'certificates_list'} content={content} sc={sc} />}
             </div>
           </Section>
         )}
