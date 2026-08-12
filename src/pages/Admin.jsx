@@ -62,15 +62,13 @@ function AdminDashboard({ logout }) {
   const [content, setContent]           = useState({})
   const [triplets, setTriplets]         = useState([])
   const [skills, setSkills]             = useState([])
-  const [achievements, setAchievements] = useState([])
+  const [, setAchievements] = useState([])
   const [projects, setProjects]         = useState([])
   const [msg, setMsg]                   = useState('')
   const [activeSection, setActiveSection] = useState('header')
   const [achTab, setAchTab] = useState('achievements')
 
-  useEffect(() => { load() }, [])
-
-  const load = () => {
+ const load = () => {
     Promise.all([
       supabase.from('site_content').select('*'),
       supabase.from('triplet_items').select('*').order('order'),
@@ -85,6 +83,8 @@ function AdminDashboard({ logout }) {
       setProjects(pr.data || [])
     })
   }
+
+  useEffect(() => { load() }, [])
 
   const toast = (err) => {
     if (err) setMsg('Error: ' + err.message)
