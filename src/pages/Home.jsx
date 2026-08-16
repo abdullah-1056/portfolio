@@ -420,15 +420,21 @@ export default function Home() {
               <div className="ach-list">
                 <div className="ach-list-title">1. ACHIEVEMENTS</div>
                 <ul>
-                  {(get('achievements_list', 'Appointed as Operations Management Intern — Youth School for Social Entrepreneurs (YSSE), 2024\n1st Place — Inter-University Programming Contest, 2023'))
+                  {(get('achievements_list', ''))
                     .split('\n').filter(l => l.trim()).map((item, i) => <li key={i}>{item}</li>)}
+                  {get('achievements_list', '').trim() === '' && (
+                    <li style={{color: 'var(--text-faint)', fontStyle: 'italic'}}>No achievements added yet. Add them in the admin panel.</li>
+                  )}
                 </ul>
               </div>
               <div className="ach-list">
                 <div className="ach-list-title">2. CERTIFICATES</div>
                 <ul>
-                  {(get('certificates_list', 'HackRank CSS Certification — 17 May 2025\nBasics of Python — 17 May 2025\nHck4G powered by CYLYNK — 2025\nUNIVERSITY CTF 2025 — HACKTHEBOX, Dec 2025'))
+                  {(get('certificates_list', ''))
                     .split('\n').filter(l => l.trim()).map((item, i) => <li key={i}>{item}</li>)}
+                  {get('certificates_list', '').trim() === '' && (
+                    <li style={{color: 'var(--text-faint)', fontStyle: 'italic'}}>No certificates added yet. Add them in the admin panel.</li>
+                  )}
                 </ul>
               </div>
             </div>
