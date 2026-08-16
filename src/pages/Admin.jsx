@@ -58,32 +58,39 @@ export default function Admin() {
 }
 
 // ─── ListEditor (moved outside AdminDashboard so it isn't recreated on every render) ──
-function ListEditor({ contentKey, content, sc }) {
+function ListEditor({ contentKey, content, sc, label = 'Item' }) {
   const raw = content[contentKey] || ''
   const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
   const [local, setLocal] = useState(items)
   return (
     <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
       <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
-        <div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+        {/* List of bullet points - displayed vertically */}
+        <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
           {local.map((it, idx) => (
             <div key={idx} style={{display:'flex',gap:'8px',alignItems:'center'}}>
-              <div style={{width:18,textAlign:'center',color:'var(--accent-blue)',fontWeight:700}}>•</div>
-              <input value={it} onChange={e => setLocal(l => l.map((x,i) => i===idx ? e.target.value : x))} style={{padding:'8px',minWidth:'320px',background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)'}} />
+              <div style={{width:18,textAlign:'center',color:'var(--accent-blue)',fontWeight:700,fontSize:'16px',flexShrink:0}}>•</div>
+              <input value={it} onChange={e => setLocal(l => l.map((x,i) => i===idx ? e.target.value : x))} style={{padding:'8px',flex:1,background:ADMIN_BG,color:ADMIN_TEXT,border:'1px solid rgba(0,0,0,0.12)',fontFamily:'var(--mono)',fontSize:'13px'}} placeholder={`${label} ${idx + 1}`} />
               <button onClick={() => {
-                if (!window.confirm('Remove this bullet?')) return
+                if (!window.confirm(`Remove this ${label.toLowerCase()}?`)) return
                 const next = local.filter((_,i) => i!==idx)
                 setLocal(next)
                 sc(contentKey, next.join('\n'))
-              }} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>Remove</button>
+              }} style={{padding:'6px 10px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',fontSize:'11px',fontWeight:'700',flexShrink:0}}>Remove</button>
             </div>
           ))}
+          {local.length === 0 && (
+            <div style={{padding:'20px',textAlign:'center',color:'var(--text-faint)',fontSize:'12px'}}>
+              No {label.toLowerCase()}s yet. Click "+ Add {label}" to get started.
+            </div>
+          )}
         </div>
-        <div style={{display:'flex',gap:'8px'}}>
-          <button onClick={() => setLocal(l => [...l, ''])} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none'}}>+ Add Bullet</button>
-          <button onClick={() => sc(contentKey, local.join('\n'))} style={{padding:'8px 12px',background:'var(--accent-blue)',cursor:'pointer',color:ADMIN_TEXT,border:'none'}}>Save</button>
+        {/* Action buttons */}
+        <div style={{display:'flex',gap:'8px',marginTop:'8px'}}>
+          <button onClick={() => setLocal(l => [...l, ''])} style={{padding:'8px 12px',cursor:'pointer',background:'var(--accent-blue)',color:ADMIN_TEXT,border:'none',fontSize:'12px',fontWeight:'700'}}>+ Add {label}</button>
+          <button onClick={() => sc(contentKey, local.join('\n'))} style={{padding:'8px 12px',background:'var(--accent-blue)',cursor:'pointer',color:ADMIN_TEXT,border:'none',fontSize:'12px',fontWeight:'700'}}>Save All</button>
         </div>
-        <div style={{fontSize:'11px',color:'var(--text-faint)'}}>Hint: press Save to persist bullets.</div>
+        <div style={{fontSize:'11px',color:'var(--text-faint)'}}>Hint: Add multiple {label.toLowerCase()}s and press "Save All" to persist all changes.</div>
       </div>
     </div>
   )
@@ -854,15 +861,25 @@ function AdminDashboard({ logout }) {
 
             <Divider label="Achievements / Certificates" />
             <div>
-              <div style={{display:'flex',gap:'8px',marginBottom:'12px'}}>
+              <div style={{display:'flex',gap:'8px',marginBottom:'16px'}}>
                 <button onClick={() => setAchTab('achievements')}
-                  style={{padding:'8px 12px',background: achTab==='achievements' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='achievements' ? ADMIN_TEXT : 'var(--text-dim)'}}>Achievements</button>
+                  style={{padding:'10px 16px',background: achTab==='achievements' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='achievements' ? ADMIN_TEXT : 'var(--text-dim)',fontWeight: achTab==='achievements' ? '700' : '400',fontSize:'12px',fontFamily:'var(--mono)',letterSpacing:'0.04em'}}>
+                  1. ACHIEVEMENTS
+                </button>
                 <button onClick={() => setAchTab('certificates')}
-                  style={{padding:'8px 12px',background: achTab==='certificates' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='certificates' ? ADMIN_TEXT : 'var(--text-dim)'}}>Certificates</button>
+                  style={{padding:'10px 16px',background: achTab==='certificates' ? 'var(--accent-blue)' : 'transparent',border:'1px solid var(--line)',cursor:'pointer',color: achTab==='certificates' ? ADMIN_TEXT : 'var(--text-dim)',fontWeight: achTab==='certificates' ? '700' : '400',fontSize:'12px',fontFamily:'var(--mono)',letterSpacing:'0.04em'}}>
+                  2. CERTIFICATES
+                </button>
               </div>
+              
+              {/* Display current section label */}
+              <div style={{padding:'12px',marginBottom:'12px',background:'rgba(94,200,248,0.08)',border:'1px solid var(--accent-blue)',fontSize:'13px',fontWeight:'700',color:'var(--accent-blue)',letterSpacing:'0.04em'}}>
+                {achTab === 'achievements' ? '📋 Editing: ACHIEVEMENTS (Section 1)' : '🎓 Editing: CERTIFICATES (Section 2)'}
+              </div>
+              
               {achTab === 'achievements'
-                ? <ListEditor contentKey={'achievements_list'} content={content} sc={sc} />
-                : <ListEditor contentKey={'certificates_list'} content={content} sc={sc} />}
+                ? <ListEditor contentKey={'achievements_list'} content={content} sc={sc} label="Achievement" />
+                : <ListEditor contentKey={'certificates_list'} content={content} sc={sc} label="Certificate" />}
             </div>
           </Section>
         )}
