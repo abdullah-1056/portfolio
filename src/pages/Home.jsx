@@ -3,6 +3,8 @@ import MatrixRain from '../components/MatrixRain'
 import Globe from '../components/Globe'
 import { supabase } from '../lib/supabase'
 
+const getExperienceValue = (content, key, fallback) => content[key] || fallback
+
 export default function Home() {
   const [content, setContent] = useState({})
   const [triplets, setTriplets] = useState([
@@ -45,6 +47,15 @@ export default function Home() {
     }
   ])
   const [, setAchievements] = useState([])
+  const experienceCount = content.experience_count !== undefined
+    ? Math.max(0, Number(content.experience_count) || 0)
+    : 3
+  const experienceItems = Array.from({ length: experienceCount }, (_, index) => index + 1).map((number) => ({
+    period: getExperienceValue(content, `experience_${number}_period`, number === 1 ? '2024 — PRESENT' : number === 2 ? '2023 — 2024' : number === 3 ? '2022 — PRESENT' : ''),
+    role: getExperienceValue(content, `experience_${number}_role`, number === 1 ? 'FULL-STACK DEVELOPER' : number === 2 ? 'CYBERSECURITY PRACTITIONER' : number === 3 ? 'TECHNICAL PROJECTS' : ''),
+    company: getExperienceValue(content, `experience_${number}_company`, number === 1 ? 'INDEPENDENT WORK' : number === 2 ? 'SECURITY LABS' : number === 3 ? 'PERSONAL PORTFOLIO' : ''),
+    description: getExperienceValue(content, `experience_${number}_description`, number === 1 ? 'Building responsive web experiences, portfolio systems, and practical tools from idea to deployment.' : number === 2 ? 'Developing hands-on skills through Linux, web security, networking, and capture-the-flag practice.' : number === 3 ? 'Turning academic knowledge into focused projects across development, design, and infrastructure.' : '')
+  }))
   const [projects, setProjects] = useState([
     { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
     { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
@@ -97,23 +108,42 @@ export default function Home() {
   }
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('site_content').select('*'),
-      supabase.from('triplet_items').select('*').order('order'),
-      supabase.from('process_steps').select('*').order('order'),
-      supabase.from('skills').select('*').order('order'),
-      supabase.from('achievements').select('*').order('order'),
-      supabase.from('projects').select('*').order('order')
-    ]).then(([c, t, p, s, a, pr]) => {
-      if (c.data && c.data.length > 0) {
-        setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
-      }
-      if (t.data && t.data.length > 0) setTriplets(t.data)
-      if (p.data && p.data.length > 0) setSteps(p.data)
-      if (s.data && s.data.length > 0) setSkills(s.data)
-      if (a.data && a.data.length > 0) setAchievements(a.data)
-      if (pr.data && pr.data.length > 0) setProjects(pr.data)
-    })
+    const loadContent = async () => {
+      const results = await Promise.all([
+        supabase.from('site_content').select('*'),
+        supabase.from('triplet_items').select('*').order('order'),
+        supabase.from('process_steps').select('*').order('order'),
+        supabase.from('skills').select('*').order('order'),
+        supabase.from('achievements').select('*').order('order'),
+        supabase.from('projects').select('*').order('order')
+      ])
+      const [c, t, p, s, a, pr] = results
+
+      if (c.error) console.error('Failed to load site content:', c.error)
+      if (c.data?.length) setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
+      if (t.data?.length) setTriplets(t.data)
+      if (p.data?.length) setSteps(p.data)
+      if (s.data?.length) setSkills(s.data)
+      if (a.data?.length) setAchievements(a.data)
+      if (pr.data?.length) setProjects(pr.data)
+    }
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') loadContent()
+    }
+
+    loadContent()
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+
+    const channel = supabase
+      .channel('site-content-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_content' }, loadContent)
+      .subscribe()
+
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const get = (key, fallback = '') => content[key] || fallback
@@ -135,6 +165,7 @@ export default function Home() {
               <li><a href="#home">HOME</a></li>
               <li><a href="#about-hero">ABOUT</a></li>
               <li><a href="#process">EDUCATION</a></li>
+              <li><a href="#experience">WORKING EXPERIENCE</a></li>
               <li><a href="#skillset-head">SKILLS</a></li>
               <li><a href="#projects">PROJECTS</a></li>
               <li><a href="#achievements">ACHIEVEMENTS</a></li>
@@ -284,9 +315,29 @@ export default function Home() {
 
        
 
+        <section id="experience">
+          <div className="wrap">
+            <div className="section-label">04 — WORKING EXPERIENCE</div>
+            <h2>WORKING<br/><span className="accent">EXPERIENCE</span></h2>
+            <div className="experience-list">
+              {experienceItems.map((item, index) => (
+                <article className="experience-item" key={item.role}>
+                  <div className="experience-index">{String(index + 1).padStart(2, '0')}</div>
+                  <div className="experience-period">{item.period}</div>
+                  <div className="experience-main">
+                    <div className="experience-role">{item.role}</div>
+                    <div className="experience-company">{item.company}</div>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="skills-section">
           <div id="skillset-head" className="wrap">
-            <div className="section-label">04 — SKILLS</div>
+            <div className="section-label">05 — SKILLS</div>
             <h3>{get('skills_heading', 'THREE-LAYER SKILL SET')}</h3>
           </div>
 
@@ -342,7 +393,7 @@ export default function Home() {
 
         <section id="projects">
           <div className="wrap">
-            <div className="section-label">05 — PROJECTS</div>
+            <div className="section-label">06 — PROJECTS</div>
             <h2>FEATURED<br/>PROJECTS</h2>
             <div className="projects-grid">
               {projects.map((project, i) => (
@@ -399,7 +450,7 @@ export default function Home() {
 
         <section id="achievements">
           <div className="wrap">
-            <div className="section-label">06 — ACHIEVEMENTS</div>
+            <div className="section-label">07 — ACHIEVEMENTS</div>
             <h2>ACHIEVEMENTS &amp;<br/>CERTIFICATES</h2>
             <div className="achievement-overview">
               <a className="overview-card overview-card-primary" href={achievementsDriveUrl} target="_blank" rel="noopener">
@@ -460,7 +511,7 @@ export default function Home() {
           <div className="wrap">
             <div className="cta-grid">
               <div className="cta-left">
-                <div className="contact-label">07 — CONTACT</div>
+                <div className="contact-label">08 — CONTACT</div>
                 <h2 dangerouslySetInnerHTML={{__html: get('contact_headline', 'Have a project idea<br/>in mind? Let\'s get<br/>started')}} />
                 <p>{get('contact_subtext', "We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.")}</p>
               </div>

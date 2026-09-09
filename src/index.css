@@ -701,6 +701,61 @@ section{
 #projects{
   padding:90px 0 140px;
 }
+#experience{
+  padding:90px 0 120px;
+}
+#experience h2{
+  font-size:clamp(1.8rem,5vw,2.8rem);
+  text-transform:uppercase;
+  font-weight:800;
+  line-height:1.15;
+  margin-bottom:64px;
+}
+.experience-list{
+  border-top:1px solid var(--line);
+}
+.experience-item{
+  display:grid;
+  grid-template-columns:70px 180px 1fr;
+  gap:28px;
+  padding:30px 0;
+  border-bottom:1px solid var(--line);
+}
+.experience-index,.experience-period{
+  color:var(--accent-orange);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.05em;
+}
+.experience-period{color:var(--text-faint);}
+.experience-role{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.experience-company{
+  color:var(--accent-blue);
+  font-size:13px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+.experience-main p{
+  max-width:680px;
+  color:var(--text-dim);
+  font-size:16px;
+  line-height:1.7;
+}
+@media (max-width:900px){
+  .experience-item{grid-template-columns:50px 1fr;gap:12px 20px;}
+  .experience-main{grid-column:2;}
+}
+@media (max-width:600px){
+  .experience-item{grid-template-columns:1fr;gap:10px;}
+  .experience-main{grid-column:auto;}
+}
 #projects h2{
   font-size:clamp(1.8rem,5vw,2.8rem);
   text-transform:uppercase;

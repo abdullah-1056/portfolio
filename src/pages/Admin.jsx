@@ -113,6 +113,7 @@ function AdminDashboard({ logout }) {
   const [msg, setMsg]                   = useState('')
   const [activeSection, setActiveSection] = useState('header')
   const [achTab, setAchTab] = useState('achievements')
+  const [experienceCount, setExperienceCount] = useState(3)
 
   const load = () => {
     Promise.all([
@@ -122,7 +123,11 @@ function AdminDashboard({ logout }) {
       supabase.from('achievements').select('*').order('order'),
       supabase.from('projects').select('*').order('order'),
     ]).then(([c, t, s, a, pr]) => {
-      setContent(Object.fromEntries((c.data || []).map(r => [r.key, r.value])))
+      const nextContent = Object.fromEntries((c.data || []).map(r => [r.key, r.value]))
+      setContent(nextContent)
+      setExperienceCount(nextContent.experience_count !== undefined
+        ? Math.max(0, Number(nextContent.experience_count) || 0)
+        : 3)
       setTriplets(t.data || [])
       setSkills(s.data || [])
       setAchievements(a.data || [])
@@ -138,9 +143,73 @@ function AdminDashboard({ logout }) {
   }
 
   // site_content upsert
-  const sc = (key, value) => {
+  const sc = async (key, value) => {
     setContent(c => ({ ...c, [key]: value }))
-    supabase.from('site_content').upsert({ key, value, updated_at: new Date().toISOString() }).then(({ error }) => toast(error))
+    const { error } = await supabase
+      .from('site_content')
+      .upsert({ key, value, updated_at: new Date().toISOString() })
+    toast(error)
+  }
+
+  const removeExperience = async (number) => {
+    if (!window.confirm(`Remove experience ${String(number).padStart(2, '0')}?`)) return
+
+    const nextCount = experienceCount - 1
+    const experienceFields = ['period', 'company', 'role', 'description']
+    const keysToDelete = []
+    const nextContent = { ...content }
+
+    for (let sourceNumber = number; sourceNumber <= experienceCount; sourceNumber += 1) {
+      experienceFields.forEach(field => {
+        keysToDelete.push(`experience_${sourceNumber}_${field}`)
+        delete nextContent[`experience_${sourceNumber}_${field}`]
+      })
+    }
+    keysToDelete.push('experience_count')
+    delete nextContent.experience_count
+
+    for (let targetNumber = number; targetNumber <= nextCount; targetNumber += 1) {
+      const sourceNumber = targetNumber + 1
+      experienceFields.forEach(field => {
+        const sourceKey = `experience_${sourceNumber}_${field}`
+        const targetKey = `experience_${targetNumber}_${field}`
+        if (content[sourceKey] !== undefined && content[sourceKey] !== '') {
+          nextContent[targetKey] = content[sourceKey]
+        } else {
+          delete nextContent[targetKey]
+        }
+      })
+    }
+    nextContent.experience_count = String(nextCount)
+
+    const { error: deleteError } = await supabase
+      .from('site_content')
+      .delete()
+      .in('key', keysToDelete)
+    if (deleteError) {
+      toast(deleteError)
+      return
+    }
+
+    const updates = [{ key: 'experience_count', value: String(nextCount), updated_at: new Date().toISOString() }]
+    for (let numberToSave = 1; numberToSave <= nextCount; numberToSave += 1) {
+      experienceFields.forEach(field => {
+        const key = `experience_${numberToSave}_${field}`
+        if (nextContent[key] !== undefined) {
+          updates.push({ key, value: nextContent[key], updated_at: new Date().toISOString() })
+        }
+      })
+    }
+
+    const { error: updateError } = await supabase.from('site_content').upsert(updates)
+    if (updateError) {
+      toast(updateError)
+      return
+    }
+
+    setContent(nextContent)
+    setExperienceCount(Math.max(0, nextCount))
+    toast(null)
   }
 
   // generic table row update
@@ -399,11 +468,12 @@ function AdminDashboard({ logout }) {
     { id: 'home',         label: '01 Home' },
     { id: 'about',        label: '02 About' },
     { id: 'education',    label: '03 Education' },
-    { id: 'skills',       label: '04 Skills' },
-    { id: 'projects',     label: '05 Projects' },
-    { id: 'achievements', label: '06 Achievements' },
+    { id: 'experience',   label: '04 Working Experience' },
+    { id: 'skills',       label: '05 Skills' },
+    { id: 'projects',     label: '06 Projects' },
+    { id: 'achievements', label: '07 Achievements' },
     { id: 'triplets',     label: 'Statement Cards' },
-    { id: 'contact',      label: '07 Contact' },
+    { id: 'contact',      label: '08 Contact' },
     { id: 'footer',       label: 'Footer' },
   ]
 
@@ -603,9 +673,47 @@ function AdminDashboard({ logout }) {
           </Section>
         )}
 
+        {/* ── WORKING EXPERIENCE ── */}
+        {activeSection === 'experience' && (
+          <Section title="04 — Working Experience">
+            <p style={{fontSize:'12px',color:'var(--text-faint)',marginBottom:'24px'}}>Add as many roles as needed. These entries appear in the public working experience section.</p>
+            {Array.from({ length: experienceCount }, (_, index) => index + 1).map(number => (
+              <div key={number} style={{border:'1px solid var(--line)',padding:'24px',marginBottom:'20px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+                  <Label>EXPERIENCE {String(number).padStart(2, '0')}</Label>
+                  <button
+                    type="button"
+                    onClick={() => removeExperience(number)}
+                    style={{padding:'6px 10px',background:'#ff4444',color:'#fff',border:'none',fontFamily:'var(--mono)',fontSize:'11px',fontWeight:'700',cursor:'pointer'}}
+                  >
+                    REMOVE
+                  </button>
+                </div>
+                <Row>
+                  <Field label="Period" value={content[`experience_${number}_period`] || ''} onChange={v => sc(`experience_${number}_period`, v)} hint="e.g. 2024 — PRESENT" />
+                  <Field label="Company / Context" value={content[`experience_${number}_company`] || ''} onChange={v => sc(`experience_${number}_company`, v)} />
+                </Row>
+                <Field label="Role" value={content[`experience_${number}_role`] || ''} onChange={v => sc(`experience_${number}_role`, v)} />
+                <Field label="Description" value={content[`experience_${number}_description`] || ''} onChange={v => sc(`experience_${number}_description`, v)} multiline />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={async () => {
+                const nextCount = experienceCount + 1
+                setExperienceCount(nextCount)
+                await sc('experience_count', String(nextCount))
+              }}
+              style={{padding:'12px 16px',background:'var(--accent-blue)',color:'#000',border:'none',fontFamily:'var(--mono)',fontSize:'12px',fontWeight:'700',cursor:'pointer',letterSpacing:'0.04em'}}
+            >
+              + ADD WORK EXPERIENCE
+            </button>
+          </Section>
+        )}
+
         {/* ── SKILLS ── */}
         {activeSection === 'skills' && (
-          <Section title="04 — Skills">
+          <Section title="05 — Skills">
             <Field label="Section Heading" value={content.skills_heading || ''} onChange={v => sc('skills_heading', v)} hint="e.g. THREE-LAYER SKILL SET" />
             {skills.map((s, i) => (
                 <div key={s.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(12, 11, 11, 0.01)'}}>
@@ -763,7 +871,7 @@ function AdminDashboard({ logout }) {
 
         {/* ── PROJECTS ── */}
         {activeSection === 'projects' && (
-          <Section title="05 — Projects">
+          <Section title="06 — Projects">
             {projects.map((pr, i) => (
               <div key={pr.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(255,255,255,0.01)'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
@@ -861,7 +969,7 @@ function AdminDashboard({ logout }) {
 
         {/* ── ACHIEVEMENTS ── */}
         {activeSection === 'achievements' && (
-          <Section title="06 — Achievements & Certificates" titleColor={'var(--accent-blue)'}>
+          <Section title="07 — Achievements & Certificates" titleColor={'var(--accent-blue)'}>
             <Divider label="Drive Folder Links (overview cards)" />
             <Field label="Achievements Drive URL" value={content.achievements_drive_url || ''} onChange={v => sc('achievements_drive_url', v)} hint="Google Drive folder for achievements" />
             <Field label="Certificates Drive URL" value={content.certificates_drive_url || ''} onChange={v => sc('certificates_drive_url', v)} hint="Google Drive folder for certificates" />
@@ -906,7 +1014,7 @@ function AdminDashboard({ logout }) {
 
         {/* ── CONTACT ── */}
         {activeSection === 'contact' && (
-          <Section title="07 — Contact">
+          <Section title="08 — Contact">
             <Field label="Section Headline (HTML allowed)" value={content.contact_headline || ''} onChange={v => sc('contact_headline', v)} hint="Use <br/> for line breaks. e.g. Have a project idea<br/>in mind?" />
             <Field label="Section Subtext" value={content.contact_subtext || ''} onChange={v => sc('contact_subtext', v)} multiline />
           </Section>
