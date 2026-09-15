@@ -241,30 +241,37 @@ CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true)
 -- ───────────────────────────────────────────────────────────────────────────────
 
 DROP POLICY IF EXISTS "Authenticated write site_content" ON site_content;
+DROP POLICY IF EXISTS "Allow all write site_content" ON site_content;
 CREATE POLICY "Authenticated write site_content" ON site_content
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write triplet_items" ON triplet_items;
+DROP POLICY IF EXISTS "Allow all write triplet_items" ON triplet_items;
 CREATE POLICY "Authenticated write triplet_items" ON triplet_items
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write process_steps" ON process_steps;
+DROP POLICY IF EXISTS "Allow all write process_steps" ON process_steps;
 CREATE POLICY "Authenticated write process_steps" ON process_steps
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write skills" ON skills;
+DROP POLICY IF EXISTS "Allow all write skills" ON skills;
 CREATE POLICY "Authenticated write skills" ON skills
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write projects" ON projects;
+DROP POLICY IF EXISTS "Allow all write projects" ON projects;
 CREATE POLICY "Authenticated write projects" ON projects
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write education" ON education;
+DROP POLICY IF EXISTS "Allow all write education" ON education;
 CREATE POLICY "Authenticated write education" ON education
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write achievements" ON achievements;
+DROP POLICY IF EXISTS "Allow all write achievements" ON achievements;
 CREATE POLICY "Authenticated write achievements" ON achievements
 FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
@@ -275,7 +282,7 @@ FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 -- Allow anyone to submit contact form
 DROP POLICY IF EXISTS "Anyone can submit contact form" ON contact_submissions;
 CREATE POLICY "Anyone can submit contact form" ON contact_submissions
-FOR INSERT WITH CHECK (true);
+FOR INSERT WITH CHECK (auth.role() = 'anon' OR public.is_admin());
 
 -- Only authenticated users can read submissions
 DROP POLICY IF EXISTS "Authenticated users can read submissions" ON contact_submissions;
@@ -291,10 +298,10 @@ FOR UPDATE USING (public.is_admin()) WITH CHECK (public.is_admin());
 -- STEP 10: CREATE STORAGE POLICIES - PROJECT IMAGES BUCKET
 -- ───────────────────────────────────────────────────────────────────────────────
 
--- Public read for project images
+-- Public buckets provide object URL access without a SELECT policy. Do not add
+-- a broad SELECT policy, which would also allow listing every object.
 DROP POLICY IF EXISTS "Public read project images" ON storage.objects;
-CREATE POLICY "Public read project images" ON storage.objects
-FOR SELECT USING (bucket_id = 'project-images');
+DROP POLICY IF EXISTS "Allow all operations 1mnl3fw_0" ON storage.objects;
 
 -- Allow authenticated users to upload project images
 DROP POLICY IF EXISTS "Anyone can upload project images" ON storage.objects;
@@ -319,10 +326,9 @@ FOR DELETE USING (bucket_id = 'project-images' AND public.is_admin());
 -- STEP 11: CREATE STORAGE POLICIES - RESUMES BUCKET
 -- ───────────────────────────────────────────────────────────────────────────────
 
--- Public read for resumes
+-- Public buckets provide object URL access without a SELECT policy. Do not add
+-- a broad SELECT policy, which would also allow listing every object.
 DROP POLICY IF EXISTS "Public read resumes" ON storage.objects;
-CREATE POLICY "Public read resumes" ON storage.objects
-FOR SELECT USING (bucket_id = 'resumes');
 
 -- Allow authenticated users to upload resumes
 DROP POLICY IF EXISTS "Anyone can upload resumes" ON storage.objects;
@@ -347,10 +353,9 @@ FOR DELETE USING (bucket_id = 'resumes' AND public.is_admin());
 -- STEP 12: CREATE STORAGE POLICIES - WRITEUPS BUCKET
 -- ───────────────────────────────────────────────────────────────────────────────
 
--- Public read for writeups
+-- Public buckets provide object URL access without a SELECT policy. Do not add
+-- a broad SELECT policy, which would also allow listing every object.
 DROP POLICY IF EXISTS "Public read writeups" ON storage.objects;
-CREATE POLICY "Public read writeups" ON storage.objects
-FOR SELECT USING (bucket_id = 'writeups');
 
 -- Authenticated users can upload writeups
 DROP POLICY IF EXISTS "Authenticated upload writeups" ON storage.objects;
