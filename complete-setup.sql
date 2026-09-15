@@ -9,6 +9,29 @@
 -- STEP 1: CREATE CORE TABLES
 -- ───────────────────────────────────────────────────────────────────────────────
 
+-- Explicit CMS administrator allowlist. Add an auth.users id after creating it.
+CREATE TABLE IF NOT EXISTS admin_users (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.admin_users WHERE user_id = auth.uid()
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
+
 -- Site content (key-value pairs for one-off fields)
 CREATE TABLE IF NOT EXISTS site_content (
   key TEXT PRIMARY KEY,
@@ -214,36 +237,36 @@ DROP POLICY IF EXISTS "Public read achievements" ON achievements;
 CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true);
 
 -- ───────────────────────────────────────────────────────────────────────────────
--- STEP 8: CREATE RLS POLICIES - AUTHENTICATED WRITE ACCESS
+-- STEP 8: CREATE RLS POLICIES - ADMIN WRITE ACCESS
 -- ───────────────────────────────────────────────────────────────────────────────
 
 DROP POLICY IF EXISTS "Authenticated write site_content" ON site_content;
 CREATE POLICY "Authenticated write site_content" ON site_content
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write triplet_items" ON triplet_items;
 CREATE POLICY "Authenticated write triplet_items" ON triplet_items
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write process_steps" ON process_steps;
 CREATE POLICY "Authenticated write process_steps" ON process_steps
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write skills" ON skills;
 CREATE POLICY "Authenticated write skills" ON skills
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write projects" ON projects;
 CREATE POLICY "Authenticated write projects" ON projects
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write education" ON education;
 CREATE POLICY "Authenticated write education" ON education
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Authenticated write achievements" ON achievements;
 CREATE POLICY "Authenticated write achievements" ON achievements
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 9: CREATE RLS POLICIES - CONTACT FORM
@@ -257,12 +280,12 @@ FOR INSERT WITH CHECK (true);
 -- Only authenticated users can read submissions
 DROP POLICY IF EXISTS "Authenticated users can read submissions" ON contact_submissions;
 CREATE POLICY "Authenticated users can read submissions" ON contact_submissions
-FOR SELECT USING (auth.role() = 'authenticated');
+FOR SELECT USING (public.is_admin());
 
 -- Only authenticated users can update submissions (mark as read)
 DROP POLICY IF EXISTS "Authenticated users can update submissions" ON contact_submissions;
 CREATE POLICY "Authenticated users can update submissions" ON contact_submissions
-FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+FOR UPDATE USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 10: CREATE STORAGE POLICIES - PROJECT IMAGES BUCKET
@@ -277,20 +300,20 @@ FOR SELECT USING (bucket_id = 'project-images');
 DROP POLICY IF EXISTS "Anyone can upload project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload project images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload project images" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
+FOR INSERT WITH CHECK (bucket_id = 'project-images' AND public.is_admin());
 
 -- Allow authenticated users to update project images
 DROP POLICY IF EXISTS "Anyone can update project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update project images" ON storage.objects;
 CREATE POLICY "Authenticated users can update project images" ON storage.objects
-FOR UPDATE USING (bucket_id = 'project-images' AND auth.role() = 'authenticated')
-WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
+FOR UPDATE USING (bucket_id = 'project-images' AND public.is_admin())
+WITH CHECK (bucket_id = 'project-images' AND public.is_admin());
 
 -- Allow authenticated users to delete project images
 DROP POLICY IF EXISTS "Anyone can delete project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete project images" ON storage.objects;
 CREATE POLICY "Authenticated users can delete project images" ON storage.objects
-FOR DELETE USING (bucket_id = 'project-images' AND auth.role() = 'authenticated');
+FOR DELETE USING (bucket_id = 'project-images' AND public.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 11: CREATE STORAGE POLICIES - RESUMES BUCKET
@@ -305,20 +328,20 @@ FOR SELECT USING (bucket_id = 'resumes');
 DROP POLICY IF EXISTS "Anyone can upload resumes" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload resumes" ON storage.objects;
 CREATE POLICY "Authenticated users can upload resumes" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'resumes' AND auth.role() = 'authenticated');
+FOR INSERT WITH CHECK (bucket_id = 'resumes' AND public.is_admin());
 
 -- Allow authenticated users to update resumes
 DROP POLICY IF EXISTS "Anyone can update resumes" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update resumes" ON storage.objects;
 CREATE POLICY "Authenticated users can update resumes" ON storage.objects
-FOR UPDATE USING (bucket_id = 'resumes' AND auth.role() = 'authenticated')
-WITH CHECK (bucket_id = 'resumes' AND auth.role() = 'authenticated');
+FOR UPDATE USING (bucket_id = 'resumes' AND public.is_admin())
+WITH CHECK (bucket_id = 'resumes' AND public.is_admin());
 
 -- Allow authenticated users to delete resumes
 DROP POLICY IF EXISTS "Anyone can delete resumes" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete resumes" ON storage.objects;
 CREATE POLICY "Authenticated users can delete resumes" ON storage.objects
-FOR DELETE USING (bucket_id = 'resumes' AND auth.role() = 'authenticated');
+FOR DELETE USING (bucket_id = 'resumes' AND public.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 12: CREATE STORAGE POLICIES - WRITEUPS BUCKET
@@ -332,18 +355,18 @@ FOR SELECT USING (bucket_id = 'writeups');
 -- Authenticated users can upload writeups
 DROP POLICY IF EXISTS "Authenticated upload writeups" ON storage.objects;
 CREATE POLICY "Authenticated upload writeups" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'writeups' AND auth.role() = 'authenticated');
+FOR INSERT WITH CHECK (bucket_id = 'writeups' AND public.is_admin());
 
 -- Authenticated users can update writeups
 DROP POLICY IF EXISTS "Authenticated update writeups" ON storage.objects;
 CREATE POLICY "Authenticated update writeups" ON storage.objects
-FOR UPDATE USING (bucket_id = 'writeups' AND auth.role() = 'authenticated') 
-WITH CHECK (bucket_id = 'writeups' AND auth.role() = 'authenticated');
+FOR UPDATE USING (bucket_id = 'writeups' AND public.is_admin())
+WITH CHECK (bucket_id = 'writeups' AND public.is_admin());
 
 -- Authenticated users can delete writeups
 DROP POLICY IF EXISTS "Authenticated delete writeups" ON storage.objects;
 CREATE POLICY "Authenticated delete writeups" ON storage.objects
-FOR DELETE USING (bucket_id = 'writeups' AND auth.role() = 'authenticated');
+FOR DELETE USING (bucket_id = 'writeups' AND public.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 13: CREATE INDEXES FOR PERFORMANCE

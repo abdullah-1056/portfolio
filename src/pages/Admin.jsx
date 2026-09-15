@@ -16,12 +16,38 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
+  const [adminChecked, setAdminChecked] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
+    const applySession = (nextSession) => {
+      setAdminChecked(false)
+      setIsAdmin(false)
+      setSession(nextSession)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => applySession(s))
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!session) return undefined
+
+    let active = true
+    supabase.rpc('is_admin').then(({ data, error }) => {
+      if (!active) return
+      if (error) {
+        setMsg(error.message)
+        setIsAdmin(false)
+      } else {
+        setIsAdmin(data === true)
+      }
+      setAdminChecked(true)
+    })
+
+    return () => { active = false }
+  }, [session])
 
   const login = async (e) => {
     e.preventDefault()
@@ -32,7 +58,7 @@ export default function Admin() {
     setLoading(false)
   }
 
-  if (!session) {
+  if (!session || !adminChecked) {
     // Require sign-in to avoid anonymous requests being blocked by RLS.
     // (Previously there was a DEV bypass here; it was removed to prevent RLS errors.)
     return (
@@ -50,6 +76,18 @@ export default function Admin() {
           </button>
           {msg && <div style={{marginTop:'12px',fontSize:'11px',color:'#ff4444'}}>{msg}</div>}
         </form>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'var(--mono)'}}>
+        <div style={{textAlign:'center'}}>
+          <h2 style={{fontSize:'18px',marginBottom:'12px'}}>Admin access required</h2>
+          <p style={{fontSize:'12px',color:'var(--text-dim)',marginBottom:'20px'}}>This account is not authorized to manage the portfolio.</p>
+          <button onClick={() => supabase.auth.signOut()} style={{padding:'10px 16px',border:'none',background:'var(--accent-blue)',color:'#000',fontFamily:'var(--mono)',fontSize:'11px',fontWeight:'700',cursor:'pointer'}}>LOG OUT</button>
+        </div>
       </div>
     )
   }

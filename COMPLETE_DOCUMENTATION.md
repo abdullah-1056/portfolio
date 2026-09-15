@@ -136,7 +136,8 @@ If you already have some tables:
 
 ### What Gets Created
 
-#### Tables (8 total):
+#### Tables (9 total):
+- ✅ `admin_users` - Explicit CMS administrator allowlist
 - ✅ `site_content` - Key-value pairs for content
 - ✅ `triplet_items` - Philosophy cards
 - ✅ `process_steps` - Workflow steps
@@ -153,9 +154,16 @@ If you already have some tables:
 
 #### Policies:
 - ✅ Public read access for all content
-- ✅ Authenticated write access for admin
+- ✅ Allowlisted admin write access for admin
 - ✅ Anyone can submit contact forms
-- ✅ Storage upload/delete permissions
+- ✅ Allowlisted admin storage upload/delete permissions
+
+After creating the Auth user, add its UUID to `admin_users` in SQL Editor:
+
+```sql
+insert into public.admin_users (user_id)
+select id from auth.users where email = 'YOUR_ADMIN_EMAIL';
+```
 
 ### Verification
 

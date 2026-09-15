@@ -17,7 +17,14 @@ Self-editable portfolio with dark "silent developer" aesthetic. Every text field
 2. Run SQL in `complete-setup.sql` via SQL Editor
 3. Create storage bucket: `project-images` (public read)
 4. Create admin user: Auth → Users → Add user (email/password)
-5. Copy Project URL and anon key
+5. Add that user to the admin allowlist in SQL Editor:
+
+```sql
+insert into public.admin_users (user_id)
+select id from auth.users where email = 'YOUR_ADMIN_EMAIL';
+```
+
+6. Copy Project URL and anon key
 
 ### 2. Local Dev
 
@@ -32,7 +39,7 @@ Visit `http://localhost:5173`
 
 ### 3. Admin Access
 
-Visit `/mgmt-a7f3k9` and login with your Supabase user credentials.
+Visit `/mgmt-a7f3k9` and login with the allowlisted admin user credentials.
 
 Edit any content → saves immediately to Supabase → reflects on public site.
 
