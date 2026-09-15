@@ -198,6 +198,14 @@ section{
   flex-shrink:0;
 }
 
+.profile-image-button{
+  display:block;
+  padding:0;
+  border:0;
+  background:transparent;
+  cursor:zoom-in;
+}
+
 .profile-image{
   width:320px;
   height:320px;
@@ -209,6 +217,11 @@ section{
 }
 .profile-image:hover{
   border-color:var(--text-primary);
+}
+.profile-image-button:focus-visible{
+  outline:2px solid var(--accent-blue);
+  outline-offset:8px;
+  border-radius:50%;
 }
 
 .name-block{
@@ -1177,6 +1190,71 @@ section{
   font-weight:800;
   margin-bottom:8px;
   letter-spacing:0.02em;
+}
+
+.profile-lightbox{
+  position:fixed;
+  inset:0;
+  z-index:1100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+  background:rgba(0,0,0,0.62);
+  backdrop-filter:blur(14px);
+  animation:profile-lightbox-in 0.2s ease-out;
+}
+.profile-lightbox-image{
+  width:min(78vw, 720px);
+  height:min(78vw, 720px);
+  max-width:calc(100vh - 64px);
+  max-height:calc(100vh - 64px);
+  object-fit:cover;
+  border:4px solid var(--accent-blue);
+  border-radius:50%;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 24px 80px rgba(0,0,0,0.65);
+  animation:profile-image-in 0.25s ease-out;
+}
+.profile-lightbox-close{
+  position:absolute;
+  top:24px;
+  right:28px;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:50%;
+  background:rgba(0,0,0,0.35);
+  color:var(--text-primary);
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  transition:background .2s ease, border-color .2s ease;
+}
+.profile-lightbox-close:hover,
+.profile-lightbox-close:focus-visible{
+  background:var(--accent-blue);
+  border-color:var(--accent-blue);
+  color:#000;
+}
+
+@keyframes profile-lightbox-in{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+@keyframes profile-image-in{
+  from{transform:scale(0.88);}
+  to{transform:scale(1);}
+}
+
+@media (max-width:600px){
+  .profile-lightbox{padding:24px;}
+  .profile-lightbox-image{
+    width:min(86vw, 520px);
+    height:min(86vw, 520px);
+    max-width:calc(100vh - 48px);
+    max-height:calc(100vh - 48px);
+  }
+  .profile-lightbox-close{top:16px;right:16px;}
 }
 .modal-subtitle{
   font-size:12px;

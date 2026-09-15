@@ -62,13 +62,7 @@ function ListEditor({ contentKey, content, sc, label = 'Item' }) {
   const raw = content[contentKey] || ''
   const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
   const [local, setLocal] = useState(items)
-  
-  // Sync local state when contentKey or content changes (when switching tabs)
-  useEffect(() => {
-    const raw = content[contentKey] || ''
-    const items = typeof raw === 'string' ? raw.split('\n').filter(l => l.trim()) : Array.isArray(raw) ? raw : []
-    setLocal(items)
-  }, [contentKey, content])
+
   return (
     <div style={{border:'1px solid var(--line)',padding:'12px',marginBottom:'16px',background:'rgba(255,255,255,0.01)'}}>
       <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
@@ -115,27 +109,39 @@ function AdminDashboard({ logout }) {
   const [achTab, setAchTab] = useState('achievements')
   const [experienceCount, setExperienceCount] = useState(3)
 
-  const load = () => {
-    Promise.all([
+  const load = async () => {
+    try {
+      const results = await Promise.all([
       supabase.from('site_content').select('*'),
       supabase.from('triplet_items').select('*').order('order'),
       supabase.from('skills').select('*').order('order'),
       supabase.from('achievements').select('*').order('order'),
       supabase.from('projects').select('*').order('order'),
-    ]).then(([c, t, s, a, pr]) => {
-      const nextContent = Object.fromEntries((c.data || []).map(r => [r.key, r.value]))
+      ])
+      const failedResult = results.find(result => result.error)
+      if (failedResult) {
+        setMsg('Error: ' + failedResult.error.message)
+        return
+      }
+
+      const [c, t, s, a, pr] = results
+      const nextContent = Object.fromEntries(c.data.map(r => [r.key, r.value]))
       setContent(nextContent)
       setExperienceCount(nextContent.experience_count !== undefined
         ? Math.max(0, Number(nextContent.experience_count) || 0)
         : 3)
-      setTriplets(t.data || [])
-      setSkills(s.data || [])
-      setAchievements(a.data || [])
-      setProjects(pr.data || [])
-    })
+      setTriplets(t.data)
+      setSkills(s.data)
+      setAchievements(a.data)
+      setProjects(pr.data)
+    } catch (error) {
+      setMsg('Error: ' + error.message)
+    }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    Promise.resolve().then(load)
+  }, [])
 
   const toast = (err) => {
     if (err) setMsg('Error: ' + err.message)
@@ -213,7 +219,7 @@ function AdminDashboard({ logout }) {
   }
 
   // generic table row update
-  const updateRow = (table, rows, setRows, id, field, raw) => {
+  const updateRow = async (table, rows, setRows, id, field, raw) => {
     // For tags: convert to array only when the existing row stores tags as an array
     let value = raw
     if (field === 'tags') {
@@ -229,11 +235,18 @@ function AdminDashboard({ logout }) {
     const updated = rows.map(r => r.id === id ? { ...r, [field]: value } : r)
     setRows(updated)
     const row = updated.find(r => r.id === id)
-    supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+    const previous = rows.find(r => r.id === id)
+    const { error } = await supabase.from(table).update(row).eq('id', id)
+    if (error) {
+      setRows(current => current.map(r => r.id === id ? { ...r, [field]: previous?.[field] } : r))
+      toast(error)
+    } else {
+      toast(null)
+    }
   }
 
   // save a field value after editing (used for tags to avoid converting on every keystroke)
-  const saveField = (table, rows, setRows, id, field, raw) => {
+  const saveField = async (table, rows, setRows, id, field, raw) => {
     let value = raw
     if (field === 'tags') {
       const existing = rows.find(r => r.id === id)
@@ -243,12 +256,19 @@ function AdminDashboard({ logout }) {
     const updated = rows.map(r => r.id === id ? { ...r, [field]: value, _tags_edit: undefined } : r)
     setRows(updated)
     const row = updated.find(r => r.id === id)
-    supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+    const previous = rows.find(r => r.id === id)
+    const { error } = await supabase.from(table).update(row).eq('id', id)
+    if (error) {
+      setRows(current => current.map(r => r.id === id ? { ...r, [field]: previous?.[field], _tags_edit: undefined } : r))
+      toast(error)
+    } else {
+      toast(null)
+    }
   }
 
   // save writeups (array of {label,url}). Persists to `writeups` column if existing row has it,
   // otherwise falls back to storing the first writeup in `writeup_label`/`writeup_url`.
-  const saveWriteups = (table, rows, setRows, id, rawArray) => {
+  const saveWriteups = async (table, rows, setRows, id, rawArray) => {
     const existing = rows.find(r => r.id === id) || {}
     const existingHasWriteups = Array.isArray(existing.writeups)
     const valueForUpdate = {}
@@ -264,14 +284,27 @@ function AdminDashboard({ logout }) {
     const updated = rows.map(r => r.id === id ? { ...r, writeups: rawArray, _writeups_edit: undefined, writeup_label: valueForUpdate.writeup_label ?? r.writeup_label, writeup_url: valueForUpdate.writeup_url ?? r.writeup_url } : r)
     setRows(updated)
     const row = { ...updated.find(r => r.id === id), ...valueForUpdate }
-    supabase.from(table).update(row).eq('id', id).then(({ error }) => toast(error))
+    const { error } = await supabase.from(table).update(row).eq('id', id)
+    if (error) {
+      setRows(current => current.map(r => r.id === id ? { ...r, ...existing } : r))
+      toast(error)
+    } else {
+      toast(null)
+    }
   }
 
   // save custom links for projects (array of {label,url})
-  const saveProjectLinks = (id, rawArray) => {
+  const saveProjectLinks = async (id, rawArray) => {
+    const previous = projects.find(r => r.id === id)
     const updated = projects.map(r => r.id === id ? { ...r, links: rawArray, _links_edit: undefined } : r)
     setProjects(updated)
-    supabase.from('projects').update({ links: rawArray }).eq('id', id).then(({ error }) => toast(error))
+    const { error } = await supabase.from('projects').update({ links: rawArray }).eq('id', id)
+    if (error) {
+      setProjects(current => current.map(r => r.id === id ? { ...r, links: previous?.links } : r))
+      toast(error)
+    } else {
+      toast(null)
+    }
   }
 
   // add new row
@@ -319,9 +352,13 @@ function AdminDashboard({ logout }) {
   // Delete file from Supabase Storage
   const deleteFileFromStorage = async (bucket, url) => {
     const path = getStoragePathFromUrl(url)
-    if (!path) return
+    if (!path) return null
     const { error } = await supabase.storage.from(bucket).remove([path])
-    if (error) console.error('Failed to delete file from storage:', error)
+    if (error) {
+      console.error('Failed to delete file from storage:', error)
+      return error
+    }
+    return null
   }
 
   // handlers for project image file selection and upload
@@ -340,7 +377,11 @@ function AdminDashboard({ logout }) {
     const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
     if (publicUrl) {
       // update DB with the new image_url (exclude _file from update)
-      await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
+      const { error } = await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
+      if (error) {
+        await deleteFileFromStorage(SUPABASE_BUCKET, publicUrl)
+        return toast(error)
+      }
       // update local state
       setProjects(rows => rows.map(r => r.id === project.id ? { ...r, image_url: publicUrl, _file: undefined } : r))
       toast(null)
@@ -368,7 +409,11 @@ function AdminDashboard({ logout }) {
       // append to existing images array
       const existingImages = Array.isArray(project.images) ? project.images : []
       const newImages = [...existingImages, ...uploadedUrls]
-      await supabase.from('projects').update({ images: newImages }).eq('id', project.id)
+      const { error } = await supabase.from('projects').update({ images: newImages }).eq('id', project.id)
+      if (error) {
+        await Promise.all(uploadedUrls.map(url => deleteFileFromStorage(SUPABASE_BUCKET, url)))
+        return toast(error)
+      }
       setProjects(rows => rows.map(r => r.id === project.id ? { ...r, images: newImages, _files: undefined } : r))
       setMsg(`✓ Uploaded ${uploadedUrls.length} images successfully`)
       setTimeout(() => setMsg(''), 3000)
@@ -382,14 +427,14 @@ function AdminDashboard({ logout }) {
     const project = projects.find(p => p.id === projectId)
     if (!project) return
     
-    // Delete from Storage
-    await deleteFileFromStorage(SUPABASE_BUCKET, imageUrl)
-    
     // Remove from DB
     const newImages = (project.images || []).filter(img => img !== imageUrl)
-    await supabase.from('projects').update({ images: newImages }).eq('id', projectId)
+    const { error } = await supabase.from('projects').update({ images: newImages }).eq('id', projectId)
+    if (error) return toast(error)
+
     setProjects(rows => rows.map(r => r.id === projectId ? { ...r, images: newImages } : r))
-    toast(null)
+    const storageError = await deleteFileFromStorage(SUPABASE_BUCKET, imageUrl)
+    toast(storageError || null)
   }
 
   const removeSingleProjectImage = async (projectId) => {
@@ -397,36 +442,27 @@ function AdminDashboard({ logout }) {
     const project = projects.find(p => p.id === projectId)
     if (!project || !project.image_url) return
     
-    // Delete from Storage
-    await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
-    
     // Remove from DB
-    await supabase.from('projects').update({ image_url: null }).eq('id', projectId)
+    const { error } = await supabase.from('projects').update({ image_url: null }).eq('id', projectId)
+    if (error) return toast(error)
+
     setProjects(rows => rows.map(r => r.id === projectId ? { ...r, image_url: null } : r))
-    toast(null)
+    const storageError = await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
+    toast(storageError || null)
   }
 
   // delete row - special handling for projects to clean up images
   const deleteRow = async (table, id, setRows, rows) => {
+    const storageFiles = []
+
     // Special handling for projects: delete all images from Storage
     if (table === 'projects') {
       const project = rows.find(r => r.id === id)
       if (project) {
         if (!window.confirm(`Delete project "${project.title}" and all its images from storage?`)) return
         
-        // Delete featured image
-        if (project.image_url) {
-          await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
-        }
-        
-        // Delete all gallery images
-        if (Array.isArray(project.images)) {
-          for (const imgUrl of project.images) {
-            await deleteFileFromStorage(SUPABASE_BUCKET, imgUrl)
-          }
-        }
-        
-        setMsg('Deleting project and images...')
+        if (project.image_url) storageFiles.push({ bucket: SUPABASE_BUCKET, url: project.image_url })
+        if (Array.isArray(project.images)) project.images.forEach(url => storageFiles.push({ bucket: SUPABASE_BUCKET, url }))
       }
     }
     
@@ -436,23 +472,15 @@ function AdminDashboard({ logout }) {
       if (skill) {
         if (!window.confirm(`Delete skill "${skill.category}" and all its files?`)) return
         
-        // Delete skill image if exists
-        if (skill.image_url) {
-          await deleteFileFromStorage(SUPABASE_BUCKET, skill.image_url)
-        }
-        
-        // Delete all writeup PDFs from Storage (if they're hosted in Supabase)
+        if (skill.image_url) storageFiles.push({ bucket: SUPABASE_BUCKET, url: skill.image_url })
         if (Array.isArray(skill.writeups)) {
-          for (const writeup of skill.writeups) {
+          skill.writeups.forEach(writeup => {
             if (writeup.url && writeup.url.includes('/storage/v1/object/public/')) {
-              // Detect which bucket the file is in from the URL
               const bucket = writeup.url.includes('/writeups/') ? WRITEUPS_BUCKET : SUPABASE_BUCKET
-              await deleteFileFromStorage(bucket, writeup.url)
+              storageFiles.push({ bucket, url: writeup.url })
             }
-          }
+          })
         }
-        
-        setMsg('Deleting skill, image, and writeups...')
       }
     }
     
@@ -460,7 +488,12 @@ function AdminDashboard({ logout }) {
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) return toast(error)
     setRows(rows.filter(r => r.id !== id))
-    toast(null)
+
+    const cleanupErrors = await Promise.all(
+      storageFiles.map(({ bucket, url }) => deleteFileFromStorage(bucket, url))
+    )
+    const cleanupError = cleanupErrors.find(Boolean)
+    toast(cleanupError || null)
   }
 
   const navItems = [
@@ -739,9 +772,14 @@ function AdminDashboard({ logout }) {
                       <button 
                         onClick={async () => {
                           if (!window.confirm('Delete this skill image from storage?')) return
-                          await deleteFileFromStorage(SUPABASE_BUCKET, s.image_url)
-                          updateRow('skills', skills, setSkills, s.id, 'image_url', '')
-                          toast(null)
+                          const { error } = await supabase.from('skills').update({ image_url: '' }).eq('id', s.id)
+                          if (error) {
+                            toast(error)
+                            return
+                          }
+                          setSkills(rows => rows.map(r => r.id === s.id ? { ...r, image_url: '' } : r))
+                          const storageError = await deleteFileFromStorage(SUPABASE_BUCKET, s.image_url)
+                          toast(storageError || null)
                         }}
                         style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
                         DELETE IMAGE

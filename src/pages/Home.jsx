@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import DOMPurify from 'dompurify'
 import MatrixRain from '../components/MatrixRain'
 import Globe from '../components/Globe'
 import { supabase } from '../lib/supabase'
 
 const getExperienceValue = (content, key, fallback) => content[key] || fallback
+const sanitizeTextMarkup = (value) => DOMPurify.sanitize(value, { ALLOWED_TAGS: ['br'], ALLOWED_ATTR: [] })
+const sanitizeIconMarkup = (value) => DOMPurify.sanitize(value, { ALLOWED_TAGS: ['i'], ALLOWED_ATTR: ['class', 'style'] })
 
 export default function Home() {
   const [content, setContent] = useState({})
@@ -63,6 +66,7 @@ export default function Home() {
   ])
   const [showModal, setShowModal] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
+  const [showProfileImage, setShowProfileImage] = useState(false)
   const [currentProject, setCurrentProject] = useState(null)
   const [formData, setFormData] = useState({
     fullname: '',
@@ -74,6 +78,17 @@ export default function Home() {
   })
   const [formSubmitting, setFormSubmitting] = useState(false)
   const [formMessage, setFormMessage] = useState('')
+
+  useEffect(() => {
+    if (!showProfileImage) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setShowProfileImage(false)
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showProfileImage])
 
   const handleContactSubmit = async (e) => {
     e.preventDefault()
@@ -109,23 +124,27 @@ export default function Home() {
 
   useEffect(() => {
     const loadContent = async () => {
-      const results = await Promise.all([
-        supabase.from('site_content').select('*'),
-        supabase.from('triplet_items').select('*').order('order'),
-        supabase.from('process_steps').select('*').order('order'),
-        supabase.from('skills').select('*').order('order'),
-        supabase.from('achievements').select('*').order('order'),
-        supabase.from('projects').select('*').order('order')
-      ])
-      const [c, t, p, s, a, pr] = results
+      try {
+        const results = await Promise.all([
+          supabase.from('site_content').select('*'),
+          supabase.from('triplet_items').select('*').order('order'),
+          supabase.from('process_steps').select('*').order('order'),
+          supabase.from('skills').select('*').order('order'),
+          supabase.from('achievements').select('*').order('order'),
+          supabase.from('projects').select('*').order('order')
+        ])
+        const [c, t, p, s, a, pr] = results
 
-      if (c.error) console.error('Failed to load site content:', c.error)
-      if (c.data?.length) setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
-      if (t.data?.length) setTriplets(t.data)
-      if (p.data?.length) setSteps(p.data)
-      if (s.data?.length) setSkills(s.data)
-      if (a.data?.length) setAchievements(a.data)
-      if (pr.data?.length) setProjects(pr.data)
+        if (c.error) console.error('Failed to load site content:', c.error)
+        if (!c.error && c.data) setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
+        if (!t.error && t.data) setTriplets(t.data)
+        if (!p.error && p.data) setSteps(p.data)
+        if (!s.error && s.data) setSkills(s.data)
+        if (!a.error && a.data) setAchievements(a.data)
+        if (!pr.error && pr.data) setProjects(pr.data)
+      } catch (error) {
+        console.error('Failed to load portfolio content:', error)
+      }
     }
 
     const refreshWhenVisible = () => {
@@ -177,7 +196,7 @@ export default function Home() {
         <section id="home">
           <div className="wrap">
             <div className="home-left">
-              <h1 dangerouslySetInnerHTML={{__html: get('hero_headline', 'YOUR SILENCE <br/>SECURED.')}} />
+              <h1 dangerouslySetInnerHTML={{__html: sanitizeTextMarkup(get('hero_headline', 'YOUR SILENCE <br/>SECURED.'))}} />
               <p className="lead">{get('hero_subtext', 'Voicura is a privacy-first cybersecurity service that encrypts your presence, protects your voice, and vanishes your digital footprint—elegantly.')}</p>
               <div className="btn-row">
                 <a 
@@ -218,7 +237,7 @@ export default function Home() {
             <div className="section-label">02 — ABOUT</div>
             <div className="about-content">
               <div className="name-block">
-                <h1 dangerouslySetInnerHTML={{__html: get('about_name', 'ABDULLAH AL<br>IFAQUE.')}} />
+                <h1 dangerouslySetInnerHTML={{__html: sanitizeTextMarkup(get('about_name', 'ABDULLAH AL<br>IFAQUE.'))}} />
                 <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly.')}</p>
                 <div className="side-stats">
                   <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">University</div></div>
@@ -228,7 +247,14 @@ export default function Home() {
               </div>
               {get('profile_image_url') && (
                 <div className="profile-image-container">
-                  <img src={get('profile_image_url')} alt="Profile" className="profile-image" />
+                  <button
+                    type="button"
+                    className="profile-image-button"
+                    aria-label="Enlarge profile photo"
+                    onClick={() => setShowProfileImage(true)}
+                  >
+                    <img src={get('profile_image_url')} alt="Profile" className="profile-image" />
+                  </button>
                 </div>
               )}
             </div>
@@ -379,7 +405,7 @@ export default function Home() {
                     <div className="icon-box">
                       {skill.image_url
                         ? <img src={skill.image_url} alt={skill.category} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
-                        : <div dangerouslySetInnerHTML={{__html: skill.icon_svg}} />
+                        : <div dangerouslySetInnerHTML={{__html: sanitizeIconMarkup(skill.icon_svg)}} />
                       }
                     </div>
                   </div>
@@ -512,7 +538,7 @@ export default function Home() {
             <div className="cta-grid">
               <div className="cta-left">
                 <div className="contact-label">08 — CONTACT</div>
-                <h2 dangerouslySetInnerHTML={{__html: get('contact_headline', 'Have a project idea<br/>in mind? Let\'s get<br/>started')}} />
+                <h2 dangerouslySetInnerHTML={{__html: sanitizeTextMarkup(get('contact_headline', 'Have a project idea<br/>in mind? Let\'s get<br/>started'))}} />
                 <p>{get('contact_subtext', "We'll schedule a call to discuss your idea. After discovery sessions, we'll send a proposal, and upon approval, we'll get started.")}</p>
               </div>
               <div className="contact-form-panel">
@@ -652,6 +678,31 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {showProfileImage && get('profile_image_url') && (
+          <div
+            className="profile-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Enlarged profile photo"
+            onClick={() => setShowProfileImage(false)}
+          >
+            <button
+              type="button"
+              className="profile-lightbox-close"
+              aria-label="Close enlarged profile photo"
+              onClick={() => setShowProfileImage(false)}
+            >
+              ✕
+            </button>
+            <img
+              src={get('profile_image_url')}
+              alt="Profile"
+              className="profile-lightbox-image"
+              onClick={(event) => event.stopPropagation()}
+            />
           </div>
         )}
 

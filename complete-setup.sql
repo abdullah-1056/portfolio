@@ -273,20 +273,24 @@ DROP POLICY IF EXISTS "Public read project images" ON storage.objects;
 CREATE POLICY "Public read project images" ON storage.objects
 FOR SELECT USING (bucket_id = 'project-images');
 
--- Allow anyone to upload (for development - tighten in production)
+-- Allow authenticated users to upload project images
 DROP POLICY IF EXISTS "Anyone can upload project images" ON storage.objects;
-CREATE POLICY "Anyone can upload project images" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'project-images');
+DROP POLICY IF EXISTS "Authenticated users can upload project images" ON storage.objects;
+CREATE POLICY "Authenticated users can upload project images" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
 
--- Allow anyone to update
+-- Allow authenticated users to update project images
 DROP POLICY IF EXISTS "Anyone can update project images" ON storage.objects;
-CREATE POLICY "Anyone can update project images" ON storage.objects
-FOR UPDATE USING (bucket_id = 'project-images') WITH CHECK (bucket_id = 'project-images');
+DROP POLICY IF EXISTS "Authenticated users can update project images" ON storage.objects;
+CREATE POLICY "Authenticated users can update project images" ON storage.objects
+FOR UPDATE USING (bucket_id = 'project-images' AND auth.role() = 'authenticated')
+WITH CHECK (bucket_id = 'project-images' AND auth.role() = 'authenticated');
 
--- Allow anyone to delete
+-- Allow authenticated users to delete project images
 DROP POLICY IF EXISTS "Anyone can delete project images" ON storage.objects;
-CREATE POLICY "Anyone can delete project images" ON storage.objects
-FOR DELETE USING (bucket_id = 'project-images');
+DROP POLICY IF EXISTS "Authenticated users can delete project images" ON storage.objects;
+CREATE POLICY "Authenticated users can delete project images" ON storage.objects
+FOR DELETE USING (bucket_id = 'project-images' AND auth.role() = 'authenticated');
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 11: CREATE STORAGE POLICIES - RESUMES BUCKET
@@ -297,20 +301,24 @@ DROP POLICY IF EXISTS "Public read resumes" ON storage.objects;
 CREATE POLICY "Public read resumes" ON storage.objects
 FOR SELECT USING (bucket_id = 'resumes');
 
--- Allow anyone to upload resumes
+-- Allow authenticated users to upload resumes
 DROP POLICY IF EXISTS "Anyone can upload resumes" ON storage.objects;
-CREATE POLICY "Anyone can upload resumes" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'resumes');
+DROP POLICY IF EXISTS "Authenticated users can upload resumes" ON storage.objects;
+CREATE POLICY "Authenticated users can upload resumes" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'resumes' AND auth.role() = 'authenticated');
 
--- Allow anyone to update resumes
+-- Allow authenticated users to update resumes
 DROP POLICY IF EXISTS "Anyone can update resumes" ON storage.objects;
-CREATE POLICY "Anyone can update resumes" ON storage.objects
-FOR UPDATE USING (bucket_id = 'resumes') WITH CHECK (bucket_id = 'resumes');
+DROP POLICY IF EXISTS "Authenticated users can update resumes" ON storage.objects;
+CREATE POLICY "Authenticated users can update resumes" ON storage.objects
+FOR UPDATE USING (bucket_id = 'resumes' AND auth.role() = 'authenticated')
+WITH CHECK (bucket_id = 'resumes' AND auth.role() = 'authenticated');
 
--- Allow anyone to delete resumes
+-- Allow authenticated users to delete resumes
 DROP POLICY IF EXISTS "Anyone can delete resumes" ON storage.objects;
-CREATE POLICY "Anyone can delete resumes" ON storage.objects
-FOR DELETE USING (bucket_id = 'resumes');
+DROP POLICY IF EXISTS "Authenticated users can delete resumes" ON storage.objects;
+CREATE POLICY "Authenticated users can delete resumes" ON storage.objects
+FOR DELETE USING (bucket_id = 'resumes' AND auth.role() = 'authenticated');
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 12: CREATE STORAGE POLICIES - WRITEUPS BUCKET

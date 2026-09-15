@@ -23,7 +23,10 @@ export default function Globe() {
     }
 
     let rot = 0
+    let running = true
+    let frame
     function draw(){
+      if (!running) return
       const w = canvas.width, h = canvas.height
       ctx.clearRect(0,0,w,h)
       const cx = w/2, cy = h/2
@@ -68,11 +71,12 @@ export default function Globe() {
       }
 
       rot += 0.0025
-      requestAnimationFrame(draw)
+      frame = requestAnimationFrame(draw)
     }
-    const frame = requestAnimationFrame(draw)
+    frame = requestAnimationFrame(draw)
     
     return () => {
+      running = false
       window.removeEventListener('resize', size)
       cancelAnimationFrame(frame)
     }

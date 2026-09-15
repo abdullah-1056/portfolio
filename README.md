@@ -14,8 +14,8 @@ Self-editable portfolio with dark "silent developer" aesthetic. Every text field
 ### 1. Supabase
 
 1. Create project at [supabase.com](https://supabase.com)
-2. Run SQL in `supabase-setup.sql` via SQL Editor
-3. Create storage bucket: `portfolio-assets` (public read)
+2. Run SQL in `complete-setup.sql` via SQL Editor
+3. Create storage bucket: `project-images` (public read)
 4. Create admin user: Auth → Users → Add user (email/password)
 5. Copy Project URL and anon key
 

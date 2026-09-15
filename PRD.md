@@ -100,7 +100,7 @@ Covers: hero headline/subtext, about bio, name, university/degree/year stats, ca
 | `end_year` | text |
 | `description` | text |
 
-**Images** (hero panel visual, project screenshots) go to a Supabase Storage bucket (`portfolio-assets`, public read), referenced by URL in the tables above.
+**Images** (hero panel visual, project screenshots) go to a Supabase Storage bucket (`project-images`, public read), referenced by URL in the tables above.
 
 ---
 
