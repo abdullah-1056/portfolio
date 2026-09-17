@@ -543,7 +543,6 @@ function AdminDashboard({ logout }) {
     { id: 'skills',       label: '05 Skills' },
     { id: 'projects',     label: '06 Projects' },
     { id: 'achievements', label: '07 Achievements' },
-    { id: 'triplets',     label: 'Statement Cards' },
     { id: 'contact',      label: '08 Contact' },
     { id: 'footer',       label: 'Footer' },
   ]
@@ -1072,19 +1071,6 @@ function AdminDashboard({ logout }) {
                 ? <ListEditor key="achievements_list" contentKey={'achievements_list'} content={content} sc={sc} label="Achievement" />
                 : <ListEditor key="certificates_list" contentKey={'certificates_list'} content={content} sc={sc} label="Certificate" />}
             </div>
-          </Section>
-        )}
-
-        {/* ── TRIPLET STATEMENT CARDS ── */}
-        {activeSection === 'triplets' && (
-          <Section title="Statement Cards (Philosophy)">
-            {triplets.map((t, i) => (
-              <div key={t.id} style={{border:'1px solid var(--line)',padding:'28px',marginBottom:'24px',background:'rgba(255,255,255,0.01)'}}>
-                <Label>CARD {i + 1}</Label>
-                <Field label="Title" value={t.title || ''} onChange={v => updateRow('triplet_items', triplets, setTriplets, t.id, 'title', v)} />
-                <Field label="Body" value={t.body || ''} onChange={v => updateRow('triplet_items', triplets, setTriplets, t.id, 'body', v)} multiline />
-              </div>
-            ))}
           </Section>
         )}
 

@@ -519,20 +519,6 @@ export default function Home() {
           </div>
         </section>
 
-                <section className="statement">
-          <div className="wrap">
-            <div className="divider">statement</div>
-            <div className="triplet">
-              {triplets.map(t => (
-                <div key={t.id}>
-                  <h3>{t.title}</h3>
-                  <p>{t.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section id="contact">
           <div className="wrap">
             <div className="cta-grid">
