@@ -12,6 +12,7 @@ const WRITEUPS_BUCKET = 'writeups' // Separate bucket for writeup PDFs
 // ─── Auth Shell ────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [session, setSession] = useState(null)
+  const [sessionLoaded, setSessionLoaded] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,9 +22,10 @@ export default function Admin() {
 
   useEffect(() => {
     const applySession = (nextSession) => {
+      setSession(nextSession)
+      setSessionLoaded(true)
       setAdminChecked(false)
       setIsAdmin(false)
-      setSession(nextSession)
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
@@ -32,7 +34,10 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    if (!session) return undefined
+    if (!session) {
+      setAdminChecked(true)
+      return undefined
+    }
 
     let active = true
     supabase.rpc('is_admin').then(({ data, error }) => {
@@ -58,9 +63,15 @@ export default function Admin() {
     setLoading(false)
   }
 
-  if (!session || !adminChecked) {
-    // Require sign-in to avoid anonymous requests being blocked by RLS.
-    // (Previously there was a DEV bypass here; it was removed to prevent RLS errors.)
+  if (!sessionLoaded) {
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'var(--mono)'}}>
+        <div style={{fontSize:'13px',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)'}}>Checking session…</div>
+      </div>
+    )
+  }
+
+  if (!session) {
     return (
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
         <form onSubmit={login} style={{width:'340px',border:'1px solid var(--line)',padding:'48px',background:'var(--bg-alt)'}}>
@@ -76,6 +87,14 @@ export default function Admin() {
           </button>
           {msg && <div style={{marginTop:'12px',fontSize:'11px',color:'#ff4444'}}>{msg}</div>}
         </form>
+      </div>
+    )
+  }
+
+  if (!adminChecked) {
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'var(--mono)'}}>
+        <div style={{fontSize:'13px',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-dim)'}}>Checking access…</div>
       </div>
     )
   }
