@@ -21,10 +21,13 @@ Self-editable portfolio with dark "silent developer" aesthetic. Every text field
 
 ```sql
 insert into public.admin_users (user_id)
-select id from auth.users where email = 'YOUR_ADMIN_EMAIL';
+select id from auth.users where email = 'YOUR_ADMIN_EMAIL'
+on conflict (user_id) do nothing;
 ```
 
 6. Copy Project URL and anon key
+
+> If you already ran an older SQL setup, re-run the function block in `complete-setup.sql` so the app can call `is_admin()` successfully.
 
 ### 2. Local Dev
 

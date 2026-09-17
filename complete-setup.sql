@@ -35,9 +35,23 @@ AS $$
   );
 $$;
 
-GRANT EXECUTE ON FUNCTION private.is_admin() TO anon, authenticated;
+-- Public compatibility wrapper used by the app's supabase.rpc('is_admin') call.
+-- This keeps the real check in the private schema while exposing the function
+-- the client expects to call without a schema-qualified name.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public, private
+AS $$
+  SELECT private.is_admin();
+$$;
 
--- Remove access to the legacy exposed helper, if it exists.
+GRANT EXECUTE ON FUNCTION private.is_admin() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
+
+-- Remove access to any stale legacy helper, if it exists.
 DO $$
 BEGIN
   IF to_regprocedure('public.is_admin()') IS NOT NULL THEN
@@ -439,12 +453,6 @@ INSERT INTO process_steps ("order", step_number, title, body) VALUES
   (2, '02', 'DESIGN & PROTOTYPE', 'Clean interfaces are designed with user experience at the core. Prototypes are built to validate ideas before full development begins.'),
   (3, '03', 'DEVELOP & ITERATE', 'Code is written with precision using modern tools and frameworks. Continuous iteration ensures quality at every stage.'),
   (4, '04', 'DELIVER & REFINE', 'The final product is polished and delivered with care. Feedback is welcomed to continuously improve and refine the work.')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO skills ("order", category, description, tags, icon_svg) VALUES
-  (1, 'WEB DEVELOPMENT', 'Every project begins with clean, maintainable code that brings ideas to life with modern frameworks and best practices.', 
-   ARRAY['REACT & TYPESCRIPT', 'UI/UX DESIGN'], 
-   '<svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1"><polygon points="50,5 95,27 95,73 50,95 5,73 5,27" /><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="27" x2="95" y2="73"/><line x1="95" y1="27" x2="5" y2="73"/></svg>')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO achievements ("order", title, issuer, date, description, credential_url) VALUES
