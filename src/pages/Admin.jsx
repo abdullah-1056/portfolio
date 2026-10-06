@@ -5,17 +5,28 @@ import { supabase } from '../lib/supabase'
 const ADMIN_BG = '#f9f9f6'
 const ADMIN_BG_ALT = '#26e815'
 const ADMIN_TEXT = '#000'
+const ADMIN_EMAIL = 'mdabdullah2002111@gmail.com'
 // Supabase storage buckets (set VITE_SUPABASE_BUCKET in env or dashboard)
 const SUPABASE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET || 'project-images'
 const WRITEUPS_BUCKET = 'writeups' // Separate bucket for writeup PDFs
+
+function errorMessage(error, fallback) {
+  const usable = value => typeof value === 'string' && value.trim() && value.trim() !== '{}'
+  if (usable(error)) return error
+  if (usable(error?.message)) return error.message
+  if (usable(error?.msg)) return error.msg
+  return fallback
+}
 
 // ─── Auth Shell ────────────────────────────────────────────────────────────────
 export default function Admin() {
   const [session, setSession] = useState(null)
   const [sessionLoaded, setSessionLoaded] = useState(false)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(ADMIN_EMAIL)
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [msg, setMsg] = useState('')
   const [adminChecked, setAdminChecked] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -29,7 +40,10 @@ export default function Admin() {
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => applySession(s))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      setPasswordRecovery(event === 'PASSWORD_RECOVERY')
+      applySession(s)
+    })
     return () => subscription.unsubscribe()
   }, [])
 
@@ -43,7 +57,7 @@ export default function Admin() {
     supabase.rpc('is_admin').then(({ data, error }) => {
       if (!active) return
       if (error) {
-        setMsg(error.message)
+        setMsg(errorMessage(error, 'Unable to verify admin access.'))
         setIsAdmin(false)
       } else {
         setIsAdmin(data === true)
@@ -56,11 +70,23 @@ export default function Admin() {
 
   const login = async (e) => {
     e.preventDefault()
+    setMsg('')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setMsg(error.message)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    })
+    if (error) setMsg(errorMessage(error, 'Login failed. Check your email and password.'))
     else setMsg('Logged in!')
     setLoading(false)
+  }
+
+  const updatePassword = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) return error
+    setPasswordRecovery(false)
+    await supabase.auth.signOut()
+    return null
   }
 
   if (!sessionLoaded) {
@@ -71,6 +97,10 @@ export default function Admin() {
     )
   }
 
+  if (passwordRecovery && session) {
+    return <PasswordResetForm onSubmit={updatePassword} />
+  }
+
   if (!session) {
     return (
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
@@ -79,8 +109,15 @@ export default function Admin() {
           <p style={{fontSize:'12px',color:'var(--text-faint)',marginBottom:'32px'}}>Portfolio CMS</p>
           <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}
             style={{width:'100%',padding:'12px',marginBottom:'12px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontFamily:'var(--mono)',fontSize:'13px'}} required />
-          <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)}
-            style={{width:'100%',padding:'12px',marginBottom:'24px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontFamily:'var(--mono)',fontSize:'13px'}} required />
+          <div style={{position:'relative',marginBottom:'24px'}}>
+            <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)}
+              style={{width:'100%',padding:'12px 42px 12px 12px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontFamily:'var(--mono)',fontSize:'13px'}} required />
+            <button type="button" onClick={() => setShowPassword(value => !value)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'} title={showPassword ? 'Hide password' : 'Show password'}
+              style={{position:'absolute',top:'50%',right:'10px',transform:'translateY(-50%)',padding:'4px',border:'none',background:'transparent',color:'var(--text-dim)',fontSize:'16px',lineHeight:1,cursor:'pointer'}}>
+              {showPassword ? '◉' : '◌'}
+            </button>
+          </div>
           <button type="submit" disabled={loading}
             style={{width:'100%',padding:'13px',background:'var(--accent-blue)',color:'#000',border:'none',fontFamily:'var(--mono)',fontSize:'12px',fontWeight:'700',letterSpacing:'0.06em',cursor:'pointer',textTransform:'uppercase'}}>
             {loading ? 'Loading...' : 'Login'}
@@ -112,6 +149,46 @@ export default function Admin() {
   }
 
   return <AdminDashboard logout={() => supabase.auth.signOut()} />
+}
+
+function PasswordResetForm({ onSubmit }) {
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const submit = async (event) => {
+    event.preventDefault()
+    setMessage('')
+    if (newPassword.length < 8) {
+      setMessage('Password must be at least 8 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage('Passwords do not match.')
+      return
+    }
+
+    setLoading(true)
+    const error = await onSubmit(newPassword)
+    setMessage(error ? error.message : 'Password updated. You can now log in.')
+    setLoading(false)
+  }
+
+  return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)'}}>
+      <form onSubmit={submit} style={{width:'340px',border:'1px solid var(--line)',padding:'48px',background:'var(--bg-alt)'}}>
+        <h2 style={{marginBottom:'8px',fontSize:'18px',textTransform:'uppercase',letterSpacing:'0.06em'}}>Set New Password</h2>
+        <p style={{fontSize:'12px',color:'var(--text-faint)',marginBottom:'32px'}}>Choose a new password for your admin account.</p>
+        <input type="password" placeholder="New password" value={newPassword} onChange={event => setNewPassword(event.target.value)} style={{width:'100%',padding:'12px',marginBottom:'12px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontFamily:'var(--mono)',fontSize:'13px'}} required />
+        <input type="password" placeholder="Confirm password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} style={{width:'100%',padding:'12px',marginBottom:'24px',background:'var(--bg)',border:'1px solid var(--line)',color:'var(--text-primary)',fontFamily:'var(--mono)',fontSize:'13px'}} required />
+        <button type="submit" disabled={loading} style={{width:'100%',padding:'13px',background:'var(--accent-blue)',color:'#000',border:'none',fontFamily:'var(--mono)',fontSize:'12px',fontWeight:'700',letterSpacing:'0.06em',cursor:'pointer',textTransform:'uppercase'}}>
+          {loading ? 'Updating...' : 'Update Password'}
+        </button>
+        {message && <div style={{marginTop:'12px',fontSize:'11px',color:'var(--text-dim)'}}>{message}</div>}
+      </form>
+    </div>
+  )
 }
 
 // ─── ListEditor (moved outside AdminDashboard so it isn't recreated on every render) ──

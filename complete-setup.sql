@@ -42,22 +42,15 @@ CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public, private
 AS $$
   SELECT private.is_admin();
 $$;
 
 GRANT EXECUTE ON FUNCTION private.is_admin() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.is_admin() TO anon, authenticated;
-
--- Remove access to any stale legacy helper, if it exists.
-DO $$
-BEGIN
-  IF to_regprocedure('public.is_admin()') IS NOT NULL THEN
-    REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC, anon, authenticated;
-  END IF;
-END $$;
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
 
 -- Site content (key-value pairs for one-off fields)
 CREATE TABLE IF NOT EXISTS site_content (
