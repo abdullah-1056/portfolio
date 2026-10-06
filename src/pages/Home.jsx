@@ -170,6 +170,26 @@ export default function Home() {
     if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean)
     return []
   }
+  const handleBookCallSubmit = (event) => {
+    event.preventDefault()
+    const form = event.currentTarget
+    const data = new FormData(form)
+    const destination = get('footer_phone', '01701826202').replace(/[^\d+]/g, '')
+    const whatsappNumber = destination.startsWith('+')
+      ? destination.slice(1)
+      : destination.startsWith('0') ? `880${destination.slice(1)}` : destination
+    const message = [
+      'New call booking request',
+      `Name: ${data.get('name')}`,
+      `Company: ${data.get('company') || 'Not provided'}`,
+      `Email: ${data.get('email')}`,
+      `WhatsApp: ${data.get('country_code')}${data.get('whatsapp') || 'Not provided'}`
+    ].join('\n')
+
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
+    form.reset()
+    setShowModal(false)
+  }
   const achievementsDriveUrl = get('achievements_drive_url', 'https://drive.google.com/drive/folders/17sKX9tVvo2_pIFUN4Fs3Y_XUzuuk1NBo?usp=sharing')
   const certificatesDriveUrl = get('certificates_drive_url', 'https://drive.google.com/drive/folders/1QzBad3cOJzejtCeEm-VDnpjRMgkrsMyX?usp=sharing')
   return (
@@ -610,32 +630,32 @@ export default function Home() {
               <h3>Book a Call</h3>
               <p className="modal-subtitle">We'll reach out to schedule a time</p>
               
-              <form className="modal-form" onSubmit={(e) => { e.preventDefault(); alert('Call booking submitted!'); setShowModal(false); }}>
+              <form className="modal-form" onSubmit={handleBookCallSubmit}>
                 <div className="modal-form-group">
                   <label htmlFor="modal-name">Name*</label>
-                  <input type="text" id="modal-name" placeholder="Your name" required />
+                  <input type="text" id="modal-name" name="name" placeholder="Your name" required />
                 </div>
                 
                 <div className="modal-form-group">
                   <label htmlFor="modal-company">Company</label>
-                  <input type="text" id="modal-company" placeholder="Your company (optional)" />
+                  <input type="text" id="modal-company" name="company" placeholder="Your company (optional)" />
                 </div>
                 
                 <div className="modal-form-group">
                   <label htmlFor="modal-email">Email*</label>
-                  <input type="email" id="modal-email" placeholder="you@example.com" required />
+                  <input type="email" id="modal-email" name="email" placeholder="you@example.com" required />
                 </div>
                 
                 <div className="modal-form-group">
                   <label htmlFor="modal-whatsapp">WhatsApp Number</label>
                   <div className="phone-input">
-                    <select className="country-code">
+                    <select className="country-code" name="country_code" defaultValue="+880">
                       <option value="+1">+1</option>
                       <option value="+44">+44</option>
                       <option value="+91">+91</option>
-                      <option value="+880" selected>+880</option>
+                      <option value="+880">+880</option>
                     </select>
-                    <input type="tel" id="modal-whatsapp" placeholder="234 567 8900" />
+                    <input type="tel" id="modal-whatsapp" name="whatsapp" placeholder="234 567 8900" />
                   </div>
                 </div>
                 
