@@ -32,17 +32,19 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const applySession = (nextSession) => {
+    const applySession = (nextSession, resetAccessCheck = true) => {
       setSession(nextSession)
       setSessionLoaded(true)
-      setAdminChecked(false)
-      setIsAdmin(false)
+      if (resetAccessCheck) {
+        setAdminChecked(false)
+        setIsAdmin(false)
+      }
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => applySession(session))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setPasswordRecovery(event === 'PASSWORD_RECOVERY')
-      applySession(s)
+      applySession(s, event !== 'TOKEN_REFRESHED')
     })
     return () => subscription.unsubscribe()
   }, [])
