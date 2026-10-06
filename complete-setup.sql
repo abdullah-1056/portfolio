@@ -454,12 +454,6 @@ INSERT INTO achievements ("order", title, issuer, date, description, credential_
   (3, 'UI/UX Design Fundamentals', 'Google', '2023', 'User experience design principles and prototyping certification.', '#')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO projects ("order", title, description, tags, live_url, repo_url) VALUES
-  (1, 'E-Commerce Platform', 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', ARRAY['React', 'Node.js', 'MongoDB'], '#', '#'),
-  (2, 'Task Management App', 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', ARRAY['React', 'Firebase', 'Tailwind'], '#', '#'),
-  (3, 'Portfolio CMS', 'Self-editable portfolio website with admin panel for content management without touching code.', ARRAY['React', 'Supabase', 'Vite'], '#', '#')
-ON CONFLICT DO NOTHING;
-
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- SETUP COMPLETE! 
 -- ═══════════════════════════════════════════════════════════════════════════════

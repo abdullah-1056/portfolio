@@ -58,12 +58,8 @@ export default function Home() {
     role: getExperienceValue(content, `experience_${number}_role`, number === 1 ? 'FULL-STACK DEVELOPER' : number === 2 ? 'CYBERSECURITY PRACTITIONER' : number === 3 ? 'TECHNICAL PROJECTS' : ''),
     company: getExperienceValue(content, `experience_${number}_company`, number === 1 ? 'INDEPENDENT WORK' : number === 2 ? 'SECURITY LABS' : number === 3 ? 'PERSONAL PORTFOLIO' : ''),
     description: getExperienceValue(content, `experience_${number}_description`, number === 1 ? 'Building responsive web experiences, portfolio systems, and practical tools from idea to deployment.' : number === 2 ? 'Developing hands-on skills through Linux, web security, networking, and capture-the-flag practice.' : number === 3 ? 'Turning academic knowledge into focused projects across development, design, and infrastructure.' : '')
-  }))
-  const [projects, setProjects] = useState([
-    { id: 1, title: 'E-Commerce Platform', description: 'Full-stack online shopping platform with payment integration, inventory management, and admin dashboard.', tags: ['React', 'Node.js', 'MongoDB'], live_url: '#', repo_url: '#' },
-    { id: 2, title: 'Task Management App', description: 'Collaborative project management tool with real-time updates, team collaboration, and progress tracking.', tags: ['React', 'Firebase', 'Tailwind'], live_url: '#', repo_url: '#' },
-    { id: 3, title: 'Portfolio CMS', description: 'Self-editable portfolio website with admin panel for content management without touching code.', tags: ['React', 'Supabase', 'Vite'], live_url: '#', repo_url: '#' }
-  ])
+  })).reverse()
+  const [projects, setProjects] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [showProfileImage, setShowProfileImage] = useState(false)
@@ -141,7 +137,10 @@ export default function Home() {
         if (!p.error && p.data) setSteps(p.data)
         if (!s.error && s.data) setSkills(s.data)
         if (!a.error && a.data) setAchievements(a.data)
-        if (!pr.error && pr.data) setProjects(pr.data)
+        if (!pr.error && pr.data) {
+          const placeholderTitles = new Set(['E-Commerce Platform', 'Task Management App', 'Portfolio CMS'])
+          setProjects(pr.data.filter(project => !placeholderTitles.has(project.title)))
+        }
       } catch (error) {
         console.error('Failed to load portfolio content:', error)
       }

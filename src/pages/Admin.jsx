@@ -239,9 +239,23 @@ function AdminDashboard({ logout }) {
   const [, setAchievements]             = useState([])
   const [projects, setProjects]         = useState([])
   const [msg, setMsg]                   = useState('')
-  const [activeSection, setActiveSection] = useState('header')
+  const [activeSection, setActiveSection] = useState(() => {
+    try {
+      return window.localStorage.getItem('admin-active-section') || 'header'
+    } catch {
+      return 'header'
+    }
+  })
   const [achTab, setAchTab] = useState('achievements')
   const [experienceCount, setExperienceCount] = useState(3)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('admin-active-section', activeSection)
+    } catch {
+      // Ignore storage restrictions; the dashboard still works in memory.
+    }
+  }, [activeSection])
 
   const load = async () => {
     try {
@@ -1132,7 +1146,7 @@ function AdminDashboard({ logout }) {
                 })()}
               </div>
             ))}
-            <AddButton onClick={() => addRow('projects', { order: projects.length + 1, title: 'New Project', description: '', tags: [], live_url: '', repo_url: '' }, setProjects)}>
+            <AddButton onClick={() => addRow('projects', { order: projects.length ? Math.min(...projects.map(project => Number(project.order) || 0)) - 1 : 0, title: 'New Project', description: '', tags: [], live_url: '', repo_url: '' }, setProjects)}>
               + Add Project
             </AddButton>
           </Section>
