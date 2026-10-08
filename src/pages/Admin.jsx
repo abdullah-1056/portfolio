@@ -472,15 +472,18 @@ function AdminDashboard({ logout }) {
   // Upload a file to Supabase Storage and return public URL
   const uploadFileToStorage = async (bucket, path, file) => {
     if (!file) return null
-    const { error } = await supabase.storage.from(bucket).upload(path, file, { cacheControl: '3600', upsert: true })
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      contentType: file.type || undefined,
+      upsert: false,
+    })
     if (error) {
       // Provide clearer guidance when bucket is missing
       if (error.message && error.message.toLowerCase().includes('bucket not found')) {
-        toast(new Error(`Bucket "${bucket}" not found. Create a storage bucket named '${bucket}' in your Supabase project (Storage → Buckets) and make it public or adjust permissions.`))
+        throw new Error(`Upload storage is not configured. In Supabase, run the storage setup in complete-setup.sql or create a public '${bucket}' bucket in Storage -> Buckets.`)
       } else {
-        toast(error)
+        throw error
       }
-      return null
     }
     // get public URL
     const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(path)
@@ -523,9 +526,11 @@ function AdminDashboard({ logout }) {
   const uploadProjectImage = async (project) => {
     const file = project._file
     if (!file) return toast(new Error('No file selected'))
-    const path = `projects/${project.id}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi,'')}`
-    const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
-    if (publicUrl) {
+    if (!file.type.startsWith('image/')) return toast(new Error('Please select an image file'))
+    const filename = file.name.replace(/[^a-z0-9._-]/gi, '') || 'image'
+    const path = `projects/${project.id}/${crypto.randomUUID()}_${filename}`
+    try {
+      const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
       // update DB with the new image_url (exclude _file from update)
       const { error } = await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
       if (error) {
@@ -535,6 +540,8 @@ function AdminDashboard({ logout }) {
       // update local state
       setProjects(rows => rows.map(r => r.id === project.id ? { ...r, image_url: publicUrl, _file: undefined } : r))
       toast(null)
+    } catch (error) {
+      toast(error)
     }
   }
 
@@ -548,11 +555,18 @@ function AdminDashboard({ logout }) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       setMsg(`Uploading image ${i + 1} of ${files.length}...`)
-      const path = `projects/${project.id}/${Date.now()}_${file.name.replace(/[^a-z0-9._-]/gi,'')}`
-      const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
-      if (publicUrl) uploadedUrls.push(publicUrl)
-      // small delay to avoid overwhelming the API
-      await new Promise(resolve => setTimeout(resolve, 100))
+      if (!file.type.startsWith('image/')) {
+        toast(new Error(`${file.name} is not an image file`))
+        continue
+      }
+      const filename = file.name.replace(/[^a-z0-9._-]/gi, '') || 'image'
+      const path = `projects/${project.id}/${crypto.randomUUID()}_${filename}`
+      try {
+        const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+        if (publicUrl) uploadedUrls.push(publicUrl)
+      } catch (error) {
+        toast(error)
+      }
     }
     
     if (uploadedUrls.length > 0) {
@@ -567,8 +581,6 @@ function AdminDashboard({ logout }) {
       setProjects(rows => rows.map(r => r.id === project.id ? { ...r, images: newImages, _files: undefined } : r))
       setMsg(`✓ Uploaded ${uploadedUrls.length} images successfully`)
       setTimeout(() => setMsg(''), 3000)
-    } else {
-      toast(new Error('No images were uploaded'))
     }
   }
 

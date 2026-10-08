@@ -15,7 +15,7 @@ Self-editable portfolio with dark "silent developer" aesthetic. Every text field
 
 1. Create project at [supabase.com](https://supabase.com)
 2. Run SQL in `complete-setup.sql` via SQL Editor
-3. Create storage bucket: `project-images` (public read)
+3. Run the storage section in `complete-setup.sql` (or create a public `project-images` bucket in Storage → Buckets). The image uploader uses this bucket.
 4. Create admin user: Auth → Users → Add user (email/password)
 5. Add that user to the admin allowlist in SQL Editor:
 
