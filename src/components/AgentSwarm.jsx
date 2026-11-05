@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
 const AGENTS = [
-  { id: 1, name: 'Lead.AI', color: '#ff1e44', speed: 0.038 },
+  { id: 1, name: 'Lead.AI', color: '#00d2ff', speed: 0.038 },
   { id: 2, name: 'Sentinel', color: '#00f0ff', speed: 0.032 },
   { id: 3, name: 'Architect', color: '#00ff88', speed: 0.035 },
   { id: 4, name: 'Kernel', color: '#ffb700', speed: 0.042 },
   { id: 5, name: 'Neural', color: '#c054ff', speed: 0.034 }
 ]
 
-export default function AgentSwarm({ theme = 'red' }) {
+export default function AgentSwarm({ theme = 'blue' }) {
   const [isPlaying, setIsPlaying] = useState(true)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [layerCount, setLayerCount] = useState(48)

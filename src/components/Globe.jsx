@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export default function Globe({ theme = 'red' }) {
+export default function Globe({ theme = 'blue' }) {
   const canvasRef = useRef(null)
   const themeRef = useRef(theme)
 

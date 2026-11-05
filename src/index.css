@@ -1,6 +1,6 @@
 :root {
-  /* Futuristic Luxury Black & Crimson Red Palette (Running default) */
-  --accent-rgb: 255, 30, 68;
+  /* Default Theme: Futuristic Electric Cyan Blue */
+  --accent-rgb: 0, 210, 255;
   --bg: #050508;
   --bg-alt: #0a0a0f;
   --bg-card: rgba(13, 13, 18, 0.82);
@@ -9,19 +9,19 @@
   
   --line: rgba(255, 255, 255, 0.08);
   --line-subtle: rgba(255, 255, 255, 0.04);
-  --line-red: rgba(var(--accent-rgb), 0.3);
-  --line-red-glow: rgba(var(--accent-rgb), 0.65);
+  --line-red: rgba(var(--accent-rgb), 0.35);
+  --line-red-glow: rgba(var(--accent-rgb), 0.7);
   
   --text-primary: #f6f6f8;
   --text-secondary: #c4c4d0;
   --text-dim: #888898;
   --text-faint: #505060;
   
-  --accent-red: rgb(var(--accent-rgb));
-  --accent-red-hover: #ff3355;
-  --accent-red-deep: #aa001e;
-  --accent-red-subtle: rgba(var(--accent-rgb), 0.12);
-  --accent-red-glow: 0 0 25px rgba(var(--accent-rgb), 0.5);
+  --accent-red: #00d2ff;
+  --accent-red-hover: #38bdf8;
+  --accent-red-deep: #0284c7;
+  --accent-red-subtle: rgba(0, 210, 255, 0.14);
+  --accent-red-glow: 0 0 25px rgba(0, 210, 255, 0.55);
   
   /* Original Cyan & Orange accents for Admin & backward compatibility */
   --accent-blue: #5ec8f8;
@@ -31,7 +31,7 @@
   --font-display: 'Space Grotesk', 'JetBrains Mono', sans-serif;
 }
 
-/* ─── Blue / Cyan Theme Override ─── */
+/* ─── Blue / Cyan Theme (Explicit) ─── */
 [data-theme="blue"], body.theme-blue {
   --accent-rgb: 0, 210, 255;
   --accent-red: #00d2ff;
@@ -41,6 +41,18 @@
   --accent-red-glow: 0 0 25px rgba(0, 210, 255, 0.55);
   --line-red: rgba(0, 210, 255, 0.35);
   --line-red-glow: rgba(0, 210, 255, 0.7);
+}
+
+/* ─── Crimson Red Theme ─── */
+[data-theme="red"], body.theme-red {
+  --accent-rgb: 255, 30, 68;
+  --accent-red: #ff1e44;
+  --accent-red-hover: #ff3355;
+  --accent-red-deep: #aa001e;
+  --accent-red-subtle: rgba(255, 30, 68, 0.12);
+  --accent-red-glow: 0 0 25px rgba(255, 30, 68, 0.5);
+  --line-red: rgba(255, 30, 68, 0.3);
+  --line-red-glow: rgba(255, 30, 68, 0.65);
 }
 
 * {

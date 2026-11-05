@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export default function MatrixRain({ theme = 'red' }) {
+export default function MatrixRain({ theme = 'blue' }) {
   const canvasRef = useRef(null)
   const themeRef = useRef(theme)
 
