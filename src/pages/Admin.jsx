@@ -236,7 +236,6 @@ function ListEditor({ contentKey, content, sc, label = 'Item' }) {
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 function AdminDashboard({ logout }) {
   const [content, setContent]           = useState({})
-  const [, setTriplets]                 = useState([])
   const [skills, setSkills]             = useState([])
   const [, setAchievements]             = useState([])
   const [projects, setProjects]         = useState([])
@@ -261,31 +260,39 @@ function AdminDashboard({ logout }) {
 
   const load = async () => {
     try {
-      const results = await Promise.all([
-      supabase.from('site_content').select('*'),
-      supabase.from('triplet_items').select('*').order('order'),
-      supabase.from('skills').select('*').order('order'),
-      supabase.from('achievements').select('*').order('order'),
-      supabase.from('projects').select('*').order('order'),
+      const [cRes, sRes, aRes, prRes] = await Promise.allSettled([
+        supabase.from('site_content').select('*'),
+        supabase.from('skills').select('*').order('order'),
+        supabase.from('achievements').select('*').order('order'),
+        supabase.from('projects').select('*').order('order'),
       ])
-      const failedResult = results.find(result => result.error)
-      if (failedResult) {
-        setMsg('Error: ' + failedResult.error.message)
-        return
+
+      if (cRes.status === 'fulfilled' && !cRes.value.error && cRes.value.data) {
+        const nextContent = Object.fromEntries(cRes.value.data.map(r => [r.key, r.value]))
+        setContent(nextContent)
+        try {
+          localStorage.setItem('portfolio_site_content', JSON.stringify(nextContent))
+        } catch (err) {
+          console.debug(err)
+        }
+        setExperienceCount(nextContent.experience_count !== undefined
+          ? Math.max(0, Number(nextContent.experience_count) || 0)
+          : 3)
+      } else if (cRes.status === 'fulfilled' && cRes.value.error) {
+        console.error('Failed to load site_content:', cRes.value.error)
       }
 
-      const [c, t, s, a, pr] = results
-      const nextContent = Object.fromEntries(c.data.map(r => [r.key, r.value]))
-      setContent(nextContent)
-      setExperienceCount(nextContent.experience_count !== undefined
-        ? Math.max(0, Number(nextContent.experience_count) || 0)
-        : 3)
-      setTriplets(t.data)
-      setSkills(s.data)
-      setAchievements(a.data)
-      setProjects(pr.data)
+      if (sRes.status === 'fulfilled' && !sRes.value.error && sRes.value.data) {
+        setSkills(sRes.value.data)
+      }
+      if (aRes.status === 'fulfilled' && !aRes.value.error && aRes.value.data) {
+        setAchievements(aRes.value.data)
+      }
+      if (prRes.status === 'fulfilled' && !prRes.value.error && prRes.value.data) {
+        setProjects(prRes.value.data)
+      }
     } catch (error) {
-      setMsg('Error: ' + error.message)
+      console.error('Failed to load admin data:', error)
     }
   }
 
@@ -298,9 +305,23 @@ function AdminDashboard({ logout }) {
     else { setMsg('✓ Saved'); setTimeout(() => setMsg(''), 2000) }
   }
 
-  // site_content upsert or delete
+  // site_content upsert or delete with instant cross-tab sync
   const sc = async (key, value) => {
-    setContent(c => ({ ...c, [key]: value }))
+    setContent(c => {
+      const next = { ...c, [key]: value }
+      try {
+        localStorage.setItem('portfolio_site_content', JSON.stringify(next))
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('portfolio_sync_channel')
+          bc.postMessage({ key, value, content: next })
+          bc.close()
+        }
+      } catch (err) {
+        console.debug(err)
+      }
+      return next
+    })
+
     let error
     if (value === '') {
       const res = await supabase.from('site_content').delete().eq('key', key)

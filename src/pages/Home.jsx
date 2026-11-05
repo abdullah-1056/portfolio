@@ -30,7 +30,14 @@ const sanitizeIconMarkup = (value) => {
 }
 
 export default function Home() {
-  const [content, setContent] = useState({})
+  const [content, setContent] = useState(() => {
+    try {
+      const cached = localStorage.getItem('portfolio_site_content')
+      return cached ? JSON.parse(cached) : {}
+    } catch {
+      return {}
+    }
+  })
   const [skills, setSkills] = useState([
     {
       id: 1,
@@ -167,7 +174,16 @@ export default function Home() {
         ])
 
         if (cRes.status === 'fulfilled' && !cRes.value.error && cRes.value.data) {
-          setContent(Object.fromEntries(cRes.value.data.map(r => [r.key, r.value])))
+          const fetched = Object.fromEntries(cRes.value.data.map(r => [r.key, r.value]))
+          setContent(prev => {
+            const next = { ...prev, ...fetched }
+            try {
+              localStorage.setItem('portfolio_site_content', JSON.stringify(next))
+            } catch (err) {
+              console.debug(err)
+            }
+            return next
+          })
         } else if (cRes.status === 'fulfilled' && cRes.value.error) {
           console.error('Failed to load site content:', cRes.value.error)
         }
@@ -196,6 +212,34 @@ export default function Home() {
     loadContent()
     document.addEventListener('visibilitychange', refreshWhenVisible)
 
+    // Cross-tab real-time sync with Admin dashboard
+    let bc
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('portfolio_sync_channel')
+        bc.onmessage = (event) => {
+          if (event.data?.content) {
+            setContent(event.data.content)
+          } else if (event.data?.key !== undefined) {
+            setContent(prev => ({ ...prev, [event.data.key]: event.data.value }))
+          }
+        }
+      }
+    } catch (err) {
+      console.debug(err)
+    }
+
+    const handleStorage = (e) => {
+      if (e.key === 'portfolio_site_content' && e.newValue) {
+        try {
+          setContent(JSON.parse(e.newValue))
+        } catch (err) {
+          console.debug(err)
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+
     const channel = supabase
       .channel('site-content-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'site_content' }, loadContent)
@@ -203,6 +247,8 @@ export default function Home() {
 
     return () => {
       document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.removeEventListener('storage', handleStorage)
+      if (bc) bc.close()
       supabase.removeChannel(channel)
     }
   }, [])

@@ -261,6 +261,19 @@ CREATE POLICY "Public read education" ON education FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Public read achievements" ON achievements;
 CREATE POLICY "Public read achievements" ON achievements FOR SELECT USING (true);
 
+-- Explicitly grant SELECT to anon and authenticated roles so visitors can view content
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT SELECT ON site_content, triplet_items, process_steps, skills, projects, education, achievements TO anon, authenticated;
+
+-- Enable Realtime publication so website updates automatically without manual reloads
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE site_content;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_object THEN NULL;
+END $$;
+
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 8: CREATE RLS POLICIES - ADMIN WRITE ACCESS
 -- ───────────────────────────────────────────────────────────────────────────────
