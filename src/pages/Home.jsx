@@ -6,18 +6,31 @@ import AgentSwarm from '../components/AgentSwarm'
 import { supabase } from '../lib/supabase'
 
 const getExperienceValue = (content, key, fallback) => content[key] || fallback
-const sanitizeTextMarkup = (value) => DOMPurify.sanitize(value, { ALLOWED_TAGS: ['br', 'span', 'b', 'strong'], ALLOWED_ATTR: ['class'] })
-const sanitizeIconMarkup = (value) => DOMPurify.sanitize(value, { ALLOWED_TAGS: ['i', 'svg', 'path', 'circle', 'rect', 'line', 'polyline'], ALLOWED_ATTR: ['class', 'style', 'viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'x1', 'y1', 'x2', 'y2', 'points'] })
+const sanitizeTextMarkup = (value) => {
+  if (!value) return ''
+  try {
+    if (DOMPurify && typeof DOMPurify.sanitize === 'function') {
+      return DOMPurify.sanitize(value, { ALLOWED_TAGS: ['br', 'span', 'b', 'strong'], ALLOWED_ATTR: ['class'] })
+    }
+  } catch {
+    // Safe fallback
+  }
+  return value
+}
+const sanitizeIconMarkup = (value) => {
+  if (!value) return ''
+  try {
+    if (DOMPurify && typeof DOMPurify.sanitize === 'function') {
+      return DOMPurify.sanitize(value, { ALLOWED_TAGS: ['i', 'svg', 'path', 'circle', 'rect', 'line', 'polyline'], ALLOWED_ATTR: ['class', 'style', 'viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'x1', 'y1', 'x2', 'y2', 'points'] })
+    }
+  } catch {
+    // Safe fallback
+  }
+  return value
+}
 
 export default function Home() {
   const [content, setContent] = useState({})
-  const [, setTriplets] = useState([])
-  const [, setSteps] = useState([
-    { id: 1, step_number: '01', title: 'RESEARCH & DISCOVERY', body: 'Before any code is written, the problem is deeply understood. Research drives every decision—ensuring the solution fits perfectly.' },
-    { id: 2, step_number: '02', title: 'DESIGN & PROTOTYPE', body: 'Clean interfaces are designed with user experience at the core. Prototypes are built to validate ideas before full development begins.' },
-    { id: 3, step_number: '03', title: 'DEVELOP & ITERATE', body: 'Code is written with precision using modern tools and frameworks. Continuous iteration ensures quality at every stage.' },
-    { id: 4, step_number: '04', title: 'DELIVER & REFINE', body: 'The final product is polished and delivered with care. Feedback is welcomed to continuously improve and refine the work.' }
-  ])
   const [skills, setSkills] = useState([
     {
       id: 1,
@@ -50,6 +63,11 @@ export default function Home() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [theme, setTheme] = useState(() => {
     try {
+      if (localStorage.getItem('portfolio-theme-default') !== 'blue') {
+        localStorage.setItem('portfolio-theme-default', 'blue')
+        localStorage.setItem('portfolio-theme', 'blue')
+        return 'blue'
+      }
       return localStorage.getItem('portfolio-theme') || 'blue'
     } catch {
       return 'blue'
@@ -140,25 +158,30 @@ export default function Home() {
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const results = await Promise.all([
+        const [cRes, sRes, aRes, prRes] = await Promise.allSettled([
           supabase.from('site_content').select('*'),
-          supabase.from('triplet_items').select('*').order('order'),
-          supabase.from('process_steps').select('*').order('order'),
           supabase.from('skills').select('*').order('order'),
           supabase.from('achievements').select('*').order('order'),
           supabase.from('projects').select('*').order('order')
         ])
-        const [c, t, p, s, a, pr] = results
 
-        if (c.error) console.error('Failed to load site content:', c.error)
-        if (!c.error && c.data) setContent(Object.fromEntries(c.data.map(r => [r.key, r.value])))
-        if (!t.error && t.data) setTriplets(t.data)
-        if (!p.error && p.data) setSteps(p.data)
-        if (!s.error && s.data) setSkills(s.data)
-        if (!a.error && a.data) setAchievements(a.data)
-        if (!pr.error && pr.data) {
+        if (cRes.status === 'fulfilled' && !cRes.value.error && cRes.value.data) {
+          setContent(Object.fromEntries(cRes.value.data.map(r => [r.key, r.value])))
+        } else if (cRes.status === 'fulfilled' && cRes.value.error) {
+          console.error('Failed to load site content:', cRes.value.error)
+        }
+
+        if (sRes.status === 'fulfilled' && !sRes.value.error && sRes.value.data && sRes.value.data.length > 0) {
+          setSkills(sRes.value.data)
+        }
+
+        if (aRes.status === 'fulfilled' && !aRes.value.error && aRes.value.data) {
+          setAchievements(aRes.value.data)
+        }
+
+        if (prRes.status === 'fulfilled' && !prRes.value.error && prRes.value.data) {
           const placeholderTitles = new Set(['E-Commerce Platform', 'Task Management App', 'Portfolio CMS'])
-          setProjects(pr.data.filter(project => !placeholderTitles.has(project.title)))
+          setProjects(prRes.value.data.filter(project => !placeholderTitles.has(project.title)))
         }
       } catch (error) {
         console.error('Failed to load portfolio content:', error)

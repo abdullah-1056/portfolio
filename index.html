@@ -5,6 +5,11 @@
     <script>
       try {
         var t = localStorage.getItem('portfolio-theme') || 'blue';
+        if (localStorage.getItem('portfolio-theme-default') !== 'blue') {
+          t = 'blue';
+          localStorage.setItem('portfolio-theme-default', 'blue');
+          localStorage.setItem('portfolio-theme', 'blue');
+        }
         document.documentElement.setAttribute('data-theme', t);
       } catch (e) {}
     </script>
