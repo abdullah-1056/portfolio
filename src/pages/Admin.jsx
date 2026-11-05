@@ -298,12 +298,19 @@ function AdminDashboard({ logout }) {
     else { setMsg('✓ Saved'); setTimeout(() => setMsg(''), 2000) }
   }
 
-  // site_content upsert
+  // site_content upsert or delete
   const sc = async (key, value) => {
     setContent(c => ({ ...c, [key]: value }))
-    const { error } = await supabase
-      .from('site_content')
-      .upsert({ key, value, updated_at: new Date().toISOString() })
+    let error
+    if (value === '') {
+      const res = await supabase.from('site_content').delete().eq('key', key)
+      error = res.error
+    } else {
+      const res = await supabase
+        .from('site_content')
+        .upsert({ key, value, updated_at: new Date().toISOString() })
+      error = res.error
+    }
     toast(error)
   }
 
@@ -475,7 +482,7 @@ function AdminDashboard({ logout }) {
     const { error } = await supabase.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
       contentType: file.type || undefined,
-      upsert: false,
+      upsert: true,
     })
     if (error) {
       // Provide clearer guidance when bucket is missing
@@ -490,27 +497,56 @@ function AdminDashboard({ logout }) {
     return publicData?.publicUrl || null
   }
 
-  // Extract storage path from Supabase public URL
-  const getStoragePathFromUrl = (url) => {
-    if (!url) return null
+  // Extract bucket and storage path from Supabase public URL or relative path
+  const parseStorageUrl = (url) => {
+    if (!url || typeof url !== 'string') return { bucket: null, path: null }
     try {
-      // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
-      const match = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
-      return match ? match[1] : null
+      const cleanUrl = url.split('?')[0].split('#')[0]
+      // Match /storage/v1/object/{public|sign|authenticated}/{bucket}/{path}
+      const match = cleanUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/]+)\/(.+)$/)
+      if (match) {
+        return {
+          bucket: match[1],
+          path: decodeURIComponent(match[2]),
+        }
+      }
+      // If already a relative storage path (e.g. 'hero/hero_123.jpg')
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://') && !cleanUrl.startsWith('/')) {
+        return {
+          bucket: null,
+          path: decodeURIComponent(cleanUrl),
+        }
+      }
+      return { bucket: null, path: null }
     } catch {
-      return null
+      return { bucket: null, path: null }
     }
   }
 
   // Delete file from Supabase Storage
-  const deleteFileFromStorage = async (bucket, url) => {
-    const path = getStoragePathFromUrl(url)
-    if (!path) return null
-    const { error } = await supabase.storage.from(bucket).remove([path])
+  const deleteFileFromStorage = async (fallbackBucket, url) => {
+    if (!url || typeof url !== 'string') return null
+    const { bucket: extractedBucket, path } = parseStorageUrl(url)
+    const targetBucket = extractedBucket || fallbackBucket
+    if (!targetBucket || !path) {
+      console.warn('Could not parse storage path from URL:', url)
+      return null
+    }
+
+    let { error } = await supabase.storage.from(targetBucket).remove([path])
+    // If error and fallbackBucket is different, try fallbackBucket as well
+    if (error && fallbackBucket && fallbackBucket !== targetBucket) {
+      const fallbackResult = await supabase.storage.from(fallbackBucket).remove([path])
+      if (!fallbackResult.error) {
+        error = null
+      }
+    }
+
     if (error) {
-      console.error('Failed to delete file from storage:', error)
+      console.error(`Failed to delete "${path}" from storage bucket "${targetBucket}":`, error)
       return error
     }
+    console.log(`Successfully deleted "${path}" from storage bucket "${targetBucket}"`)
     return null
   }
 
@@ -531,6 +567,10 @@ function AdminDashboard({ logout }) {
     const path = `projects/${project.id}/${crypto.randomUUID()}_${filename}`
     try {
       const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+      // Delete old image from storage if replacing an existing image
+      if (project.image_url) {
+        await deleteFileFromStorage(SUPABASE_BUCKET, project.image_url)
+      }
       // update DB with the new image_url (exclude _file from update)
       const { error } = await supabase.from('projects').update({ image_url: publicUrl }).eq('id', project.id)
       if (error) {
@@ -789,35 +829,46 @@ function AdminDashboard({ logout }) {
               <Field label="Portrait Identity Tag (Bottom)" value={content.hero_identity_tag || ''} onChange={v => sc('hero_identity_tag', v)} hint="e.g. IDENTITY: IFAQUE // VERIFIED" />
               <Field label="Portrait Fallback Badge" value={content.hero_portrait_fallback_tag || ''} onChange={v => sc('hero_portrait_fallback_tag', v)} hint="e.g. CYBERSECURITY PRACTITIONER" />
             </Row>
-          </Section>
-        )}
 
-        {/* ── ABOUT ── */}
-        {activeSection === 'about' && (
-          <Section title="02 — About">
-            <Divider label="Profile Picture" />
-            
-            {content.profile_image_url && (
+            <Divider label="Hero Portrait Card Photo (Place 1)" />
+            {(content.hero_image_url || content.profile_image_url) && (
               <div style={{marginBottom:'16px',border:'1px solid var(--line)',padding:'16px',background:'rgba(0,0,0,0.02)'}}>
-                <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>Current Profile Picture:</div>
+                <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>
+                  {content.hero_image_url ? 'Current Hero Card Photo (Custom):' : 'Current Hero Card Photo (Using About Photo as Fallback):'}
+                </div>
                 <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
-                  <img src={content.profile_image_url} alt="Profile" style={{width:'120px',height:'120px',objectFit:'cover',border:'2px solid var(--accent-blue)',borderRadius:'4px'}} />
-                  <button 
-                    onClick={async () => {
-                      if (!window.confirm('Delete profile picture from storage?')) return
-                      await deleteFileFromStorage(SUPABASE_BUCKET, content.profile_image_url)
-                      sc('profile_image_url', '')
-                      toast(null)
-                    }}
-                    style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
-                    DELETE
-                  </button>
+                  <img 
+                    src={content.hero_image_url || content.profile_image_url} 
+                    alt="Hero Portrait" 
+                    style={{width:'110px',height:'140px',objectFit:'cover',border:'2px solid var(--accent-blue)',borderRadius:'4px'}} 
+                  />
+                  {content.hero_image_url ? (
+                    <button 
+                      onClick={async () => {
+                        if (!window.confirm('Delete custom Hero portrait photo from Supabase storage and database?')) return
+                        setMsg('Deleting Hero photo from Supabase storage...')
+                        const urlToDelete = content.hero_image_url
+                        if (urlToDelete) {
+                          await deleteFileFromStorage(SUPABASE_BUCKET, urlToDelete)
+                        }
+                        await sc('hero_image_url', '')
+                        setMsg('✓ Hero portrait photo deleted from Supabase storage and database')
+                        setTimeout(() => setMsg(''), 3000)
+                      }}
+                      style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
+                      DELETE CUSTOM PHOTO
+                    </button>
+                  ) : (
+                    <div style={{fontSize:'11px',color:'var(--text-faint)'}}>
+                      Upload a dedicated photo below if you want Place 1 (Hero) to show a different photo than Place 2 (About).
+                    </div>
+                  )}
                 </div>
               </div>
             )}
             
             <div style={{marginBottom:'16px'}}>
-              <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload Profile Picture</label>
+              <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload Hero Portrait Photo (Place 1)</label>
               <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
                 <input 
                   type="file" 
@@ -831,41 +882,120 @@ function AdminDashboard({ logout }) {
                       return
                     }
                     
-                    setMsg('Uploading profile picture...')
-                    const path = `profile/profile_${Date.now()}.${file.name.split('.').pop()}`
-                    const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
-                    
-                    if (publicUrl) {
-                      // Delete old image if exists
-                      if (content.profile_image_url) {
-                        await deleteFileFromStorage(SUPABASE_BUCKET, content.profile_image_url)
+                    setMsg('Uploading Hero portrait photo to Supabase storage...')
+                    const path = `hero/hero_${Date.now()}.${file.name.split('.').pop()}`
+                    try {
+                      const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+                      if (publicUrl) {
+                        // Delete previous custom Hero photo from storage if existed
+                        if (content.hero_image_url) {
+                          await deleteFileFromStorage(SUPABASE_BUCKET, content.hero_image_url)
+                        }
+                        await sc('hero_image_url', publicUrl)
+                        setMsg('✓ Hero portrait photo uploaded to Supabase storage and saved')
+                        setTimeout(() => setMsg(''), 3000)
                       }
-                      sc('profile_image_url', publicUrl)
-                      setMsg('✓ Profile picture uploaded successfully')
+                    } catch (err) {
+                      toast(err)
+                    }
+                    e.target.value = ''
+                  }}
+                />
+              </div>
+              <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Recommended: Portrait aspect ratio (3:4 or 4:5). JPG, PNG, or WebP.</div>
+            </div>
+          </Section>
+        )}
+
+        {/* ── ABOUT ── */}
+        {activeSection === 'about' && (
+          <Section title="02 — About">
+            <Divider label="About Section Profile Photo (Place 2)" />
+            
+            {(content.about_image_url || content.profile_image_url) && (
+              <div style={{marginBottom:'16px',border:'1px solid var(--line)',padding:'16px',background:'rgba(0,0,0,0.02)'}}>
+                <div style={{fontSize:'13px',color:'var(--text-dim)',marginBottom:'8px'}}>Current About Section Photo:</div>
+                <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                  <img 
+                    src={content.about_image_url || content.profile_image_url} 
+                    alt="About Profile" 
+                    style={{width:'120px',height:'120px',objectFit:'cover',borderRadius:'50%',border:'2px solid var(--accent-blue)'}} 
+                  />
+                  <button 
+                    onClick={async () => {
+                      if (!window.confirm('Delete About profile photo from Supabase storage and database?')) return
+                      setMsg('Deleting About photo from Supabase storage...')
+                      const urlsToDelete = Array.from(new Set([content.about_image_url, content.profile_image_url].filter(Boolean)))
+                      for (const url of urlsToDelete) {
+                        await deleteFileFromStorage(SUPABASE_BUCKET, url)
+                      }
+                      await sc('about_image_url', '')
+                      await sc('profile_image_url', '')
+                      setMsg('✓ About profile photo deleted from Supabase storage and database')
                       setTimeout(() => setMsg(''), 3000)
+                    }}
+                    style={{padding:'6px 12px',background:'#ff4444',color:'#fff',border:'none',cursor:'pointer',fontSize:'11px',fontWeight:'700'}}>
+                    DELETE
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div style={{marginBottom:'16px'}}>
+              <label style={{display:'block',fontSize:'12px',marginBottom:'8px',color:'var(--text-dim)'}}>Upload About Section Photo (Place 2)</label>
+              <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png,image/webp" 
+                  onChange={async (e) => {
+                    const file = e.target.files[0]
+                    if (!file) return
+                    
+                    if (!file.type.startsWith('image/')) {
+                      toast(new Error('Please upload an image file (JPG, PNG, WebP)'))
+                      return
+                    }
+                    
+                    setMsg('Uploading About profile photo to Supabase storage...')
+                    const path = `profile/about_${Date.now()}.${file.name.split('.').pop()}`
+                    try {
+                      const publicUrl = await uploadFileToStorage(SUPABASE_BUCKET, path, file)
+                      if (publicUrl) {
+                        // Delete old profile photos from storage if existed
+                        const oldUrls = Array.from(new Set([content.about_image_url, content.profile_image_url].filter(Boolean)))
+                        for (const oldUrl of oldUrls) {
+                          await deleteFileFromStorage(SUPABASE_BUCKET, oldUrl)
+                        }
+                        await sc('about_image_url', publicUrl)
+                        await sc('profile_image_url', publicUrl)
+                        setMsg('✓ About profile photo uploaded to Supabase storage and saved')
+                        setTimeout(() => setMsg(''), 3000)
+                      }
+                    } catch (err) {
+                      toast(err)
                     }
                     e.target.value = '' // Reset input
                   }}
                 />
               </div>
-              <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Recommended: 200x200px or larger, square image. JPG, PNG, or WebP.</div>
+              <div style={{fontSize:'11px',color:'var(--text-faint)',marginTop:'8px'}}>Recommended: Square 1:1 image. JPG, PNG, or WebP.</div>
             </div>
             
             <Divider label="About Info" />
             <Field label="Name (HTML allowed)" value={content.about_name || ''} onChange={v => sc('about_name', v)} hint="Use <br> for line breaks" />
             <Field label="Bio" value={content.about_bio || ''} onChange={v => sc('about_bio', v)} multiline />
-            <Divider label="Side Stats" />
+            <Divider label="About Stats Box (Image 2 style: CSE / BUP / 2022)" />
             <Row>
-              <Field label="University (stat value)" value={content.stat_university || ''} onChange={v => sc('stat_university', v)} hint="e.g. BUP" />
-              <Field label="University (label)" value={content.stat_university_label || ''} onChange={v => sc('stat_university_label', v)} hint="e.g. UNIVERSITY" />
+              <Field label="Degree / Field (Col 1 Value)" value={content.stat_degree || ''} onChange={v => sc('stat_degree', v)} hint="e.g. CSE" />
+              <Field label="Degree Label (Col 1 Subtitle)" value={content.stat_degree_label || ''} onChange={v => sc('stat_degree_label', v)} hint="e.g. STUDENT" />
             </Row>
             <Row>
-              <Field label="Degree (stat value)" value={content.stat_degree || ''} onChange={v => sc('stat_degree', v)} hint="e.g. CSE" />
-              <Field label="Degree (label)" value={content.stat_degree_label || ''} onChange={v => sc('stat_degree_label', v)} hint="e.g. STUDENT" />
+              <Field label="University (Col 2 Value)" value={content.stat_university || ''} onChange={v => sc('stat_university', v)} hint="e.g. BUP" />
+              <Field label="University Label (Col 2 Subtitle)" value={content.stat_university_label || ''} onChange={v => sc('stat_university_label', v)} hint="e.g. UNIVERSITY" />
             </Row>
             <Row>
-              <Field label="Batch Year (stat value)" value={content.stat_year || ''} onChange={v => sc('stat_year', v)} hint="e.g. 2022" />
-              <Field label="Batch Year (label)" value={content.stat_year_label || ''} onChange={v => sc('stat_year_label', v)} hint="e.g. BATCH" />
+              <Field label="Batch Year (Col 3 Value)" value={content.stat_year || ''} onChange={v => sc('stat_year', v)} hint="e.g. 2022" />
+              <Field label="Batch Year Label (Col 3 Subtitle)" value={content.stat_year_label || ''} onChange={v => sc('stat_year_label', v)} hint="e.g. BATCH" />
             </Row>
           </Section>
         )}

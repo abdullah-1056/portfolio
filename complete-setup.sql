@@ -208,6 +208,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('project-images', 'project-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Create portfolio bucket (for profile, hero, and general site photos)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('portfolio', 'portfolio', true)
+ON CONFLICT (id) DO NOTHING;
+
 -- Create resumes bucket
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('resumes', 'resumes', true)
@@ -327,20 +332,20 @@ DROP POLICY IF EXISTS "Allow all operations 1mnl3fw_0" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can upload project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload project images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload project images" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'project-images' AND private.is_admin());
+FOR INSERT WITH CHECK (bucket_id IN ('project-images', 'portfolio') AND private.is_admin());
 
 -- Allow authenticated users to update project images
 DROP POLICY IF EXISTS "Anyone can update project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update project images" ON storage.objects;
 CREATE POLICY "Authenticated users can update project images" ON storage.objects
-FOR UPDATE USING (bucket_id = 'project-images' AND private.is_admin())
-WITH CHECK (bucket_id = 'project-images' AND private.is_admin());
+FOR UPDATE USING (bucket_id IN ('project-images', 'portfolio') AND private.is_admin())
+WITH CHECK (bucket_id IN ('project-images', 'portfolio') AND private.is_admin());
 
 -- Allow authenticated users to delete project images
 DROP POLICY IF EXISTS "Anyone can delete project images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete project images" ON storage.objects;
 CREATE POLICY "Authenticated users can delete project images" ON storage.objects
-FOR DELETE USING (bucket_id = 'project-images' AND private.is_admin());
+FOR DELETE USING (bucket_id IN ('project-images', 'portfolio') AND private.is_admin());
 
 -- ───────────────────────────────────────────────────────────────────────────────
 -- STEP 11: CREATE STORAGE POLICIES - RESUMES BUCKET

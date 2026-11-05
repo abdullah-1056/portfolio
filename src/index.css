@@ -1223,33 +1223,82 @@ body.hud-wireframe-active .contact-form-panel {
   font-family: var(--mono);
 }
 
+/* About Stats Metric Card (Enclosed Glass Box matching user screenshot) */
+.about-stats-card,
 .side-stats {
-  display: flex;
-  gap: 60px;
-  align-items: flex-start;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 17, 23, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 16px 28px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin-top: 4px;
 }
 
+.about-stat-item,
 .side-stats > div {
+  display: flex;
+  flex-direction: column;
   text-align: left;
 }
 
+.about-stat-item .stat-value,
 .side-stats .n {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: 1.85rem;
   font-weight: 800;
   line-height: 1;
-  color: #ffffff;
-  letter-spacing: -0.01em;
+  color: var(--primary);
+  letter-spacing: 0.02em;
 }
 
+.about-stat-item .stat-label,
 .side-stats .l {
-  font-size: 12px;
-  color: var(--text-faint);
-  letter-spacing: 0.12em;
+  font-size: 11.5px;
+  color: #8b949e;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin-top: 8px;
+  margin-top: 7px;
   font-weight: 700;
   font-family: var(--mono);
+  line-height: 1;
+}
+
+.stat-slash {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.95rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.28);
+  margin: 0 24px;
+  user-select: none;
+  line-height: 1;
+  align-self: center;
+}
+
+@media (max-width: 600px) {
+  .about-stats-card,
+  .side-stats {
+    padding: 14px 18px;
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+  .stat-slash {
+    margin: 0 10px;
+    font-size: 1.5rem;
+  }
+  .about-stat-item .stat-value,
+  .side-stats .n {
+    font-size: 1.45rem;
+  }
+  .about-stat-item .stat-label,
+  .side-stats .l {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
 }
 
 /* Circular Profile Image with Sky Blue Ring from User Screenshot */
@@ -1303,9 +1352,9 @@ body.hud-wireframe-active .contact-form-panel {
     width: 260px;
     height: 260px;
   }
+  .about-stats-card,
   .side-stats {
-    gap: 40px;
-    flex-wrap: wrap;
+    max-width: 100%;
   }
 }
 

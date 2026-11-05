@@ -101,6 +101,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [showProfileImage, setShowProfileImage] = useState(false)
+  const [activeLightboxImg, setActiveLightboxImg] = useState(null)
   const [currentProject, setCurrentProject] = useState(null)
   const [formData, setFormData] = useState({
     fullname: '',
@@ -207,6 +208,8 @@ export default function Home() {
   }, [])
 
   const get = (key, fallback = '') => content[key] || fallback
+  const heroImage = get('hero_image_url') || get('profile_image_url')
+  const aboutImage = get('about_image_url') || get('profile_image_url')
   const parseTags = (tags) => {
     if (Array.isArray(tags)) return tags
     if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean)
@@ -387,15 +390,25 @@ export default function Home() {
             <div className="hero-card-side">
               <div 
                 className="hero-portrait-card" 
-                onClick={() => setShowProfileImage(true)} 
+                onClick={() => {
+                  if (heroImage) {
+                    setActiveLightboxImg(heroImage)
+                    setShowProfileImage(true)
+                  }
+                }} 
                 role="button"
                 tabIndex={0}
                 aria-label="Enlarge portrait"
-                onKeyDown={(e) => { if (e.key === 'Enter') setShowProfileImage(true); }}
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter' && heroImage) {
+                    setActiveLightboxImg(heroImage)
+                    setShowProfileImage(true)
+                  }
+                }}
               >
                 <div className="card-top-tag">{get('hero_portrait_tag', '# SOVEREIGN SILICON ACTIVE')}</div>
-                {get('profile_image_url') ? (
-                  <img src={get('profile_image_url')} alt="Profile" className="hero-portrait-img" />
+                {heroImage ? (
+                  <img src={heroImage} alt="Profile" className="hero-portrait-img" />
                 ) : (
                   <div className="hero-portrait-fallback">
                     <svg viewBox="0 0 120 120" className="hero-avatar-svg" fill="none">
@@ -424,22 +437,36 @@ export default function Home() {
               <div className="name-block">
                 <h1 dangerouslySetInnerHTML={{__html: sanitizeTextMarkup(get('about_name', 'ABDULLAH AL<br/>IFAQUE'))}} />
                 <p>{get('about_bio', 'A dedicated student at Bangladesh University of Professionals, passionate about technology, design, and building impactful digital experiences—elegantly')}</p>
-                <div className="side-stats">
-                  <div><div className="n">{get('stat_university', 'BUP')}</div><div className="l">{get('stat_university_label', 'UNIVERSITY')}</div></div>
-                  <div><div className="n">{get('stat_degree', 'CSE')}</div><div className="l">{get('stat_degree_label', 'STUDENT')}</div></div>
-                  <div><div className="n">{get('stat_year', '2022')}</div><div className="l">{get('stat_year_label', 'BATCH')}</div></div>
+                <div className="about-stats-card">
+                  <div className="about-stat-item">
+                    <div className="stat-value">{get('stat_degree', 'CSE')}</div>
+                    <div className="stat-label">{get('stat_degree_label', 'STUDENT')}</div>
+                  </div>
+                  <div className="stat-slash" aria-hidden="true">/</div>
+                  <div className="about-stat-item">
+                    <div className="stat-value">{get('stat_university', 'BUP')}</div>
+                    <div className="stat-label">{get('stat_university_label', 'UNIVERSITY')}</div>
+                  </div>
+                  <div className="stat-slash" aria-hidden="true">/</div>
+                  <div className="about-stat-item">
+                    <div className="stat-value">{get('stat_year', '2022')}</div>
+                    <div className="stat-label">{get('stat_year_label', 'BATCH')}</div>
+                  </div>
                 </div>
               </div>
 
-              {get('profile_image_url') && (
+              {aboutImage && (
                 <div className="profile-image-container">
                   <button
                     type="button"
                     className="profile-image-button"
                     aria-label="Enlarge profile photo"
-                    onClick={() => setShowProfileImage(true)}
+                    onClick={() => {
+                      setActiveLightboxImg(aboutImage)
+                      setShowProfileImage(true)
+                    }}
                   >
-                    <img src={get('profile_image_url')} alt="Profile" className="profile-image" />
+                    <img src={aboutImage} alt="Profile" className="profile-image" />
                   </button>
                 </div>
               )}
@@ -891,7 +918,7 @@ export default function Home() {
         )}
 
         {/* Profile Image Lightbox */}
-        {showProfileImage && get('profile_image_url') && (
+        {showProfileImage && (activeLightboxImg || aboutImage || heroImage || get('profile_image_url')) && (
           <div
             className="profile-lightbox"
             role="dialog"
@@ -909,7 +936,7 @@ export default function Home() {
             </button>
             <div className="profile-lightbox-wrap" onClick={(e) => e.stopPropagation()}>
               <img
-                src={get('profile_image_url')}
+                src={activeLightboxImg || aboutImage || heroImage || get('profile_image_url')}
                 alt="Profile"
                 className="profile-lightbox-image"
               />
