@@ -290,7 +290,7 @@ export default function Home() {
     <>
       {/* Background Cyber Rain & Floating Agent Swarm from Reference Video */}
       <MatrixRain theme={theme} />
-      <AgentSwarm theme={theme} />
+      <AgentSwarm theme={theme} dockLabel={get('hud_dock_label', 'ABDULLAH')} />
       <div className="ambient-glow" aria-hidden="true" />
       <div className="cyber-grid-overlay" aria-hidden="true" />
 

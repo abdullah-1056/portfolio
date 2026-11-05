@@ -834,6 +834,7 @@ function AdminDashboard({ logout }) {
               <Field label="Script Greeting" value={content.hero_script_greeting || ''} onChange={v => sc('hero_script_greeting', v)} hint="e.g. Hello, I'm" />
               <Field label="HUD Status Badge" value={content.hero_hud_status || ''} onChange={v => sc('hero_hud_status', v)} hint="e.g. STATUS: ACTIVE // FULL-STACK & CYBERSECURITY" />
             </Row>
+            <Field label="Bottom HUD Dock Name / Label" value={content.hud_dock_label || ''} onChange={v => sc('hud_dock_label', v)} hint="Bottom toolbar dock label (default: ABDULLAH)" />
             <Field label="Giant Background Wordmark" value={content.hero_bg_wordmark || ''} onChange={v => sc('hero_bg_wordmark', v)} hint="Huge outlined background text (default: PORTFOLIO)" />
             <Field label="Headline (HTML allowed)" value={content.hero_headline || ''} onChange={v => sc('hero_headline', v)} hint="Use <br/> for line breaks and <span class='accent-text'> for highlighted text" />
             <Field label="Subtext" value={content.hero_subtext || ''} onChange={v => sc('hero_subtext', v)} multiline />

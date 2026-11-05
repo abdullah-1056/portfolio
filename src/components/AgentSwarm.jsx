@@ -8,7 +8,7 @@ const AGENTS = [
   { id: 5, name: 'Neural', color: '#c054ff', speed: 0.034 }
 ]
 
-export default function AgentSwarm({ theme = 'blue' }) {
+export default function AgentSwarm({ theme = 'blue', dockLabel = 'ABDULLAH' }) {
   const [isPlaying, setIsPlaying] = useState(true)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [layerCount, setLayerCount] = useState(48)
@@ -268,7 +268,7 @@ export default function AgentSwarm({ theme = 'blue' }) {
         </div>
 
         <div className="dock-label">
-          <span className="dock-count">5 AGENTS</span>
+          <span className="dock-count">{dockLabel || 'ABDULLAH'}</span>
           <span className="dock-layers">// {layerCount} / 252 LAYERS</span>
         </div>
 
