@@ -308,7 +308,12 @@ function AdminDashboard({ logout }) {
   // site_content upsert or delete with instant cross-tab sync
   const sc = async (key, value) => {
     setContent(c => {
-      const next = { ...c, [key]: value }
+      const next = { ...c }
+      if (value === '' || value === null) {
+        delete next[key]
+      } else {
+        next[key] = value
+      }
       try {
         localStorage.setItem('portfolio_site_content', JSON.stringify(next))
         if (typeof BroadcastChannel !== 'undefined') {

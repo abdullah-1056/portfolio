@@ -175,15 +175,12 @@ export default function Home() {
 
         if (cRes.status === 'fulfilled' && !cRes.value.error && cRes.value.data) {
           const fetched = Object.fromEntries(cRes.value.data.map(r => [r.key, r.value]))
-          setContent(prev => {
-            const next = { ...prev, ...fetched }
-            try {
-              localStorage.setItem('portfolio_site_content', JSON.stringify(next))
-            } catch (err) {
-              console.debug(err)
-            }
-            return next
-          })
+          setContent(fetched)
+          try {
+            localStorage.setItem('portfolio_site_content', JSON.stringify(fetched))
+          } catch (err) {
+            console.debug(err)
+          }
         } else if (cRes.status === 'fulfilled' && cRes.value.error) {
           console.error('Failed to load site content:', cRes.value.error)
         }
@@ -221,7 +218,15 @@ export default function Home() {
           if (event.data?.content) {
             setContent(event.data.content)
           } else if (event.data?.key !== undefined) {
-            setContent(prev => ({ ...prev, [event.data.key]: event.data.value }))
+            setContent(prev => {
+              const next = { ...prev }
+              if (event.data.value === '' || event.data.value === null) {
+                delete next[event.data.key]
+              } else {
+                next[event.data.key] = event.data.value
+              }
+              return next
+            })
           }
         }
       }
@@ -230,9 +235,9 @@ export default function Home() {
     }
 
     const handleStorage = (e) => {
-      if (e.key === 'portfolio_site_content' && e.newValue) {
+      if (e.key === 'portfolio_site_content') {
         try {
-          setContent(JSON.parse(e.newValue))
+          setContent(e.newValue ? JSON.parse(e.newValue) : {})
         } catch (err) {
           console.debug(err)
         }
