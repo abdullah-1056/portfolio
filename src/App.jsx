@@ -12,8 +12,10 @@ export default function App() {
         <Route
           path="/mgmt-a7f3k9"
           element={(
-            <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg)' }} />}>
-              <Admin />
+            <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0a0a' }} />}>
+              <div className="admin-root">
+                <Admin />
+              </div>
             </Suspense>
           )}
         />

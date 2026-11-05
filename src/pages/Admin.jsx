@@ -51,7 +51,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!session) {
-      setAdminChecked(true)
+      queueMicrotask(() => setAdminChecked(true))
       return undefined
     }
 
@@ -236,7 +236,7 @@ function ListEditor({ contentKey, content, sc, label = 'Item' }) {
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 function AdminDashboard({ logout }) {
   const [content, setContent]           = useState({})
-  const [triplets, setTriplets]         = useState([])
+  const [, setTriplets]                 = useState([])
   const [skills, setSkills]             = useState([])
   const [, setAchievements]             = useState([])
   const [projects, setProjects]         = useState([])
@@ -706,7 +706,10 @@ function AdminDashboard({ logout }) {
         {/* ── HEADER ── */}
         {activeSection === 'header' && (
           <Section title="Header">
-            <Field label="Logo Name" value={content.header_name || ''} onChange={v => sc('header_name', v)} hint="Shown next to the ◆ diamond in the top-left" />
+            <Row>
+              <Field label="Logo Name" value={content.header_name || ''} onChange={v => sc('header_name', v)} hint="Shown next to the ◆ diamond in the top-left" />
+              <Field label="Status Tag" value={content.header_status_tag || ''} onChange={v => sc('header_status_tag', v)} hint="Top-left status badge (default: SYS.ON)" />
+            </Row>
             <Divider label="Resume" />
             
             {content.resume_url && (
@@ -766,8 +769,26 @@ function AdminDashboard({ logout }) {
         {/* ── HOME ── */}
         {activeSection === 'home' && (
           <Section title="01 — Home Hero">
-            <Field label="Headline (HTML allowed)" value={content.hero_headline || ''} onChange={v => sc('hero_headline', v)} hint="Use <br/> for line breaks" />
+            <Row>
+              <Field label="Script Greeting" value={content.hero_script_greeting || ''} onChange={v => sc('hero_script_greeting', v)} hint="e.g. Hello, I'm" />
+              <Field label="HUD Status Badge" value={content.hero_hud_status || ''} onChange={v => sc('hero_hud_status', v)} hint="e.g. STATUS: ACTIVE // FULL-STACK & CYBERSECURITY" />
+            </Row>
+            <Field label="Giant Background Wordmark" value={content.hero_bg_wordmark || ''} onChange={v => sc('hero_bg_wordmark', v)} hint="Huge outlined background text (default: PORTFOLIO)" />
+            <Field label="Headline (HTML allowed)" value={content.hero_headline || ''} onChange={v => sc('hero_headline', v)} hint="Use <br/> for line breaks and <span class='accent-text'> for highlighted text" />
             <Field label="Subtext" value={content.hero_subtext || ''} onChange={v => sc('hero_subtext', v)} multiline />
+            
+            <Divider label="Action Buttons" />
+            <Row>
+              <Field label="Resume Button Label" value={content.hero_resume_btn_text || ''} onChange={v => sc('hero_resume_btn_text', v)} hint="default: DOWNLOAD RESUME" />
+              <Field label="Explore Work Button Label" value={content.hero_explore_btn_text || ''} onChange={v => sc('hero_explore_btn_text', v)} hint="default: EXPLORE WORK" />
+            </Row>
+
+            <Divider label="Hero Portrait Card Tags" />
+            <Field label="Portrait Top Tag" value={content.hero_portrait_tag || ''} onChange={v => sc('hero_portrait_tag', v)} hint="e.g. # SOVEREIGN SILICON ACTIVE" />
+            <Row>
+              <Field label="Portrait Identity Tag (Bottom)" value={content.hero_identity_tag || ''} onChange={v => sc('hero_identity_tag', v)} hint="e.g. IDENTITY: IFAQUE // VERIFIED" />
+              <Field label="Portrait Fallback Badge" value={content.hero_portrait_fallback_tag || ''} onChange={v => sc('hero_portrait_fallback_tag', v)} hint="e.g. CYBERSECURITY PRACTITIONER" />
+            </Row>
           </Section>
         )}
 
@@ -835,9 +856,16 @@ function AdminDashboard({ logout }) {
             <Field label="Bio" value={content.about_bio || ''} onChange={v => sc('about_bio', v)} multiline />
             <Divider label="Side Stats" />
             <Row>
-              <Field label="University (stat)" value={content.stat_university || ''} onChange={v => sc('stat_university', v)} hint="e.g. BUP" />
-              <Field label="Degree (stat)" value={content.stat_degree || ''} onChange={v => sc('stat_degree', v)} hint="e.g. CSE" />
-              <Field label="Batch Year (stat)" value={content.stat_year || ''} onChange={v => sc('stat_year', v)} hint="e.g. 2022" />
+              <Field label="University (stat value)" value={content.stat_university || ''} onChange={v => sc('stat_university', v)} hint="e.g. BUP" />
+              <Field label="University (label)" value={content.stat_university_label || ''} onChange={v => sc('stat_university_label', v)} hint="e.g. UNIVERSITY" />
+            </Row>
+            <Row>
+              <Field label="Degree (stat value)" value={content.stat_degree || ''} onChange={v => sc('stat_degree', v)} hint="e.g. CSE" />
+              <Field label="Degree (label)" value={content.stat_degree_label || ''} onChange={v => sc('stat_degree_label', v)} hint="e.g. STUDENT" />
+            </Row>
+            <Row>
+              <Field label="Batch Year (stat value)" value={content.stat_year || ''} onChange={v => sc('stat_year', v)} hint="e.g. 2022" />
+              <Field label="Batch Year (label)" value={content.stat_year_label || ''} onChange={v => sc('stat_year_label', v)} hint="e.g. BATCH" />
             </Row>
           </Section>
         )}
@@ -845,6 +873,8 @@ function AdminDashboard({ logout }) {
         {/* ── EDUCATION ── */}
         {activeSection === 'education' && (
           <Section title="03 — Education">
+            <Field label="Section Heading (HTML allowed)" value={content.edu_heading || ''} onChange={v => sc('edu_heading', v)} hint="Use <br/> and <span class='accent'> for styling. default: ACADEMIC<br/><span class='accent'>BACKGROUND</span>" />
+            
             <Divider label="Degree Card" />
             <Row>
               <Field label="Degree Badge" value={content.edu_degree_badge || ''} onChange={v => sc('edu_degree_badge', v)} hint="e.g. B.Sc." />
@@ -860,8 +890,22 @@ function AdminDashboard({ logout }) {
               <Field label="CGPA Max" value={content.edu_cgpa_max || ''} onChange={v => sc('edu_cgpa_max', v)} hint="e.g. 4.00" />
               <Field label="Status" value={content.edu_status || ''} onChange={v => sc('edu_status', v)} hint="e.g. ONGOING / COMPLETED" />
             </Row>
+            <Row>
+              <Field label="Degree Meta Label" value={content.edu_meta_degree || ''} onChange={v => sc('edu_meta_degree', v)} hint="e.g. Bachelor of Science" />
+              <Field label="Department Meta Label" value={content.edu_meta_dept || ''} onChange={v => sc('edu_meta_dept', v)} hint="e.g. CSE" />
+            </Row>
+
+            <Divider label="3D Holographic Globe HUD" />
+            <Row>
+              <Field label="Globe HUD Title" value={content.edu_globe_title || ''} onChange={v => sc('edu_globe_title', v)} hint="default: 3D HOLOGRAPHIC // GLOBE" />
+              <Field label="Globe Coordinates" value={content.edu_globe_coord || ''} onChange={v => sc('edu_globe_coord', v)} hint="default: LOC: 23.81°N, 90.41°E" />
+            </Row>
+
             <Divider label="Thesis Card" />
-            <Field label="Thesis Title" value={content.thesis_title || ''} onChange={v => sc('thesis_title', v)} hint="e.g. University Thesis" />
+            <Row>
+              <Field label="Thesis Badge" value={content.thesis_badge || ''} onChange={v => sc('thesis_badge', v)} hint="default: THESIS DOCUMENT" />
+              <Field label="Thesis Title" value={content.thesis_title || ''} onChange={v => sc('thesis_title', v)} hint="e.g. University Thesis" />
+            </Row>
             <Field label="Thesis Description" value={content.thesis_desc || ''} onChange={v => sc('thesis_desc', v)} multiline />
             <Field label="Thesis Google Drive URL" value={content.thesis_url || ''} onChange={v => sc('thesis_url', v)} hint="Full https://drive.google.com/... link" />
           </Section>
@@ -870,6 +914,7 @@ function AdminDashboard({ logout }) {
         {/* ── WORKING EXPERIENCE ── */}
         {activeSection === 'experience' && (
           <Section title="04 — Working Experience">
+            <Field label="Section Heading (HTML allowed)" value={content.experience_heading || ''} onChange={v => sc('experience_heading', v)} hint="Use <br/> and <span class='accent'> for styling. default: WORKING<br/><span class='accent'>EXPERIENCE</span>" />
             <p style={{fontSize:'12px',color:'var(--text-faint)',marginBottom:'24px'}}>Add as many roles as needed. These entries appear in the public working experience section.</p>
             {Array.from({ length: experienceCount }, (_, index) => index + 1).map(number => (
               <div key={number} style={{border:'1px solid var(--line)',padding:'24px',marginBottom:'20px'}}>
@@ -1173,7 +1218,20 @@ function AdminDashboard({ logout }) {
             <Field label="Achievements Drive URL" value={content.achievements_drive_url || ''} onChange={v => sc('achievements_drive_url', v)} hint="Google Drive folder for achievements" />
             <Field label="Certificates Drive URL" value={content.certificates_drive_url || ''} onChange={v => sc('certificates_drive_url', v)} hint="Google Drive folder for certificates" />
 
-            <Divider label="Achievements / Certificates" />
+            <Divider label="Drive Repository Cards (Overview)" />
+            <Row>
+              <Field label="Card 1 Badge" value={content.achievements_card_badge || ''} onChange={v => sc('achievements_card_badge', v)} hint="default: DRIVE REPOSITORY" />
+              <Field label="Card 1 Title" value={content.achievements_card_title || ''} onChange={v => sc('achievements_card_title', v)} hint="default: Achievements" />
+            </Row>
+            <Field label="Card 1 Description" value={content.achievements_card_desc || ''} onChange={v => sc('achievements_card_desc', v)} multiline />
+            
+            <Row>
+              <Field label="Card 2 Badge" value={content.certificates_card_badge || ''} onChange={v => sc('certificates_card_badge', v)} hint="default: ACADEMIC & CTF" />
+              <Field label="Card 2 Title" value={content.certificates_card_title || ''} onChange={v => sc('certificates_card_title', v)} hint="default: Certificates" />
+            </Row>
+            <Field label="Card 2 Description" value={content.certificates_card_desc || ''} onChange={v => sc('certificates_card_desc', v)} multiline />
+
+            <Divider label="Achievements / Certificates Lists" />
             <div>
               <div style={{display:'flex',gap:'8px',marginBottom:'16px'}}>
                 <button onClick={() => setAchTab('achievements')}
@@ -1203,13 +1261,28 @@ function AdminDashboard({ logout }) {
           <Section title="08 — Contact">
             <Field label="Section Headline (HTML allowed)" value={content.contact_headline || ''} onChange={v => sc('contact_headline', v)} hint="Use <br/> for line breaks. e.g. Have a project idea<br/>in mind?" />
             <Field label="Section Subtext" value={content.contact_subtext || ''} onChange={v => sc('contact_subtext', v)} multiline />
+            
+            <Divider label="Status Info Pills" />
+            <Row>
+              <Field label="Info Pill 1 (Red Dot)" value={content.contact_pill_1 || ''} onChange={v => sc('contact_pill_1', v)} hint="default: RESPONSE TIME: < 24H" />
+              <Field label="Info Pill 2 (Green Dot)" value={content.contact_pill_2 || ''} onChange={v => sc('contact_pill_2', v)} hint="default: AVAILABILITY: SELECT PROJECTS" />
+            </Row>
+
+            <Divider label="Direct Call Booking" />
+            <Row>
+              <Field label="Call Prompt Text" value={content.contact_call_prompt || ''} onChange={v => sc('contact_call_prompt', v)} hint="default: Prefer direct scheduling?" />
+              <Field label="Call Button Text" value={content.contact_call_btn_text || ''} onChange={v => sc('contact_call_btn_text', v)} hint="default: Book A Call Directly →" />
+            </Row>
           </Section>
         )}
 
         {/* ── FOOTER ── */}
         {activeSection === 'footer' && (
           <Section title="Footer">
-            <Field label="Wordmark (big text)" value={content.footer_wordmark || ''} onChange={v => sc('footer_wordmark', v)} hint="e.g. IFAQUE" />
+            <Row>
+              <Field label="Wordmark (big text)" value={content.footer_wordmark || ''} onChange={v => sc('footer_wordmark', v)} hint="e.g. IFAQUE" />
+              <Field label="Wordmark Tagline" value={content.footer_tagline || ''} onChange={v => sc('footer_tagline', v)} hint="e.g. CYBERSECURITY PRACTITIONER & DEVELOPER" />
+            </Row>
             <Field label="Copyright" value={content.footer_copyright || ''} onChange={v => sc('footer_copyright', v)} hint="e.g. ©2026" />
             <Divider label="Contact Info" />
             <Field label="Email" value={content.footer_email || ''} onChange={v => sc('footer_email', v)} hint="e.g. mdabdullah2002111@gmail.com" />
