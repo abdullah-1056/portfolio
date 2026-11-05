@@ -463,7 +463,6 @@ export default function Home() {
                       <path d="M24 102c0-20 16-36 36-36s36 16 36 36" stroke="var(--accent-red)" strokeWidth="2" />
                       <line x1="10" y1="60" x2="110" y2="60" stroke="var(--accent-red)" strokeWidth="0.8" strokeDasharray="2 4" strokeOpacity="0.5" />
                     </svg>
-                    <span className="fallback-hud-text">{get('hero_portrait_fallback_tag', 'CYBERSECURITY PRACTITIONER')}</span>
                   </div>
                 )}
                 <div className="card-bottom-tag">

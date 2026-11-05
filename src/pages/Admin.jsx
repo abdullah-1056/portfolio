@@ -847,10 +847,7 @@ function AdminDashboard({ logout }) {
 
             <Divider label="Hero Portrait Card Tags" />
             <Field label="Portrait Top Tag" value={content.hero_portrait_tag || ''} onChange={v => sc('hero_portrait_tag', v)} hint="e.g. # SOVEREIGN SILICON ACTIVE" />
-            <Row>
-              <Field label="Portrait Identity Tag (Bottom)" value={content.hero_identity_tag || ''} onChange={v => sc('hero_identity_tag', v)} hint="e.g. IDENTITY: IFAQUE // VERIFIED" />
-              <Field label="Portrait Fallback Badge" value={content.hero_portrait_fallback_tag || ''} onChange={v => sc('hero_portrait_fallback_tag', v)} hint="e.g. CYBERSECURITY PRACTITIONER" />
-            </Row>
+            <Field label="Portrait Identity Tag (Bottom)" value={content.hero_identity_tag || ''} onChange={v => sc('hero_identity_tag', v)} hint="e.g. IDENTITY: IFAQUE // VERIFIED" />
 
             <Divider label="Hero Portrait Card Photo (Place 1)" />
             {(content.hero_image_url || content.profile_image_url) && (
